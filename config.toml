@@ -1,0 +1,21 @@
+[VAE_PARAMS]
+nc = 3
+ndf = 16
+latent_variable_size = 2048
+img_shape = [ 128, 128,]
+depth = 6
+
+[CRITIC_PARAMS]
+nc = 3
+ndf = 32
+img_shape = [ 128, 128,]
+depth = 6
+
+[ENC_OPT_PARAMS]
+lr = 0.0005
+
+[DEC_OPT_PARAMS]
+lr = 0.0005
+
+[CRITIC_OPT_PARAMS]
+lr = 0.0005
