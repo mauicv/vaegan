@@ -4,8 +4,7 @@ import torch
 from pathlib import Path
 
 
-def setup_fs(
-      PATH, 
+def setup_models(
       CRITIC_PARAMS, 
       VAE_PARAMS, 
       CRITIC_OPT_PARAMS, 
@@ -13,8 +12,8 @@ def setup_fs(
       DEC_OPT_PARAMS, 
       cuda):
 
-    Path('./data').mkdir(exist_ok=True)
-    Path('./models').mkdir(exist_ok=True)
+    PATH = Path('./saved_models')
+    PATH.mkdir(exist_ok=True)
 
     def new():
         critic = Critic(**CRITIC_PARAMS)
@@ -82,4 +81,5 @@ def setup_fs(
             'dec_opt': dec_opt,
             'epoch': data['epoch']
         }
+
     return new, save, load
