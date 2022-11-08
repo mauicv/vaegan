@@ -1,7 +1,7 @@
-data
 venv
 models
 __pycache__
 saved_models
 training
+dataset
 dataset/celeba
