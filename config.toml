@@ -1,4 +1,4 @@
-cuda = False
+cuda = false
 save_rate = 250
 
 [VAE_PARAMS]
