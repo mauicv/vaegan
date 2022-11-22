@@ -1,4 +1,6 @@
-from model.blocks import Encoder, Decoder
+from model.decoder import Decoder
+from model.encoder import Encoder, DownSampleBatchConv2dBlock
+
 
 from itertools import chain
 
@@ -12,19 +14,20 @@ class AutoEncoder(nn.Module):
           self, 
           nc, 
           ndf, 
-          latent_variable_size, 
+          latent_dim, 
           depth=5, 
           img_shape=(64, 64)):
         super(AutoEncoder, self).__init__()
         self.encoder = Encoder(nc=nc, ndf=ndf, depth=depth, 
-                               img_shape=img_shape, 
-                               norm_type='batch')
+                               img_shape=img_shape,
+                               downsample_block_type=DownSampleBatchConv2dBlock
+                               )
         self.decoder = Decoder(nc=nc, ndf=ndf, depth=depth, 
-                               latent_variable_size=latent_variable_size,
+                               latent_dim=latent_dim,
                                img_shape=img_shape)
         self.fc1 = nn.Linear(
             self.encoder.encoding_output_shape, 
-            latent_variable_size)
+            latent_dim)
 
     def forward(self, x):
         x = self.encoder(x)
@@ -47,26 +50,26 @@ class VarAutoEncoder(AutoEncoder):
           self, 
           nc, 
           ndf, 
-          latent_variable_size, 
+          latent_dim, 
           depth=5, 
           img_shape=(128, 128),
           cuda=False):
         super(VarAutoEncoder, self).__init__(nc, 
               ndf, 
-              latent_variable_size, 
+              latent_dim, 
               depth=depth,
               img_shape=img_shape)
-        self.latent_variable_size = latent_variable_size
+        self.latent_dim = latent_dim
         print('linear_input_size: ', self.encoder.encoding_output_shape)
         self.fc2 = nn.Linear(
             self.encoder.encoding_output_shape,
-            latent_variable_size)
+            latent_dim)
         self.cuda = cuda
 
     def reparametrize(self, mu, logvar):
         var = torch.exp(logvar*0.5)
         normal = Variable(
-            torch.randn(len(mu), self.latent_variable_size),
+            torch.randn(len(mu), self.latent_dim),
             requires_grad=True)
         if self.cuda: normal = normal.cuda()
         return normal * var + mu
@@ -83,7 +86,7 @@ class VarAutoEncoder(AutoEncoder):
 
     def sample(self, z=None, batch_size=64):
         if z is None:
-          z = Variable(torch.randn((batch_size, self.latent_variable_size)), 
+          z = Variable(torch.randn((batch_size, self.latent_dim)), 
                       requires_grad=True)
         if self.cuda: z = z.cuda()
         return self.decoder(z)
