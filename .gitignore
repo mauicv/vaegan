@@ -2,7 +2,7 @@
 venv
 models
 __pycache__
-saved_models
 training
 dataset/*
 .ipynb_checkpoints
+saved

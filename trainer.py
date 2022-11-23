@@ -1,7 +1,7 @@
 from pathlib import Path
 import torch
 import torch.nn.functional as F
-from utils import KL_div_loss
+from utils.losses import KL_div_loss
 import csv
 
 

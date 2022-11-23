@@ -60,7 +60,6 @@ class VarAutoEncoder(AutoEncoder):
               depth=depth,
               img_shape=img_shape)
         self.latent_dim = latent_dim
-        print('linear_input_size: ', self.encoder.encoding_output_shape)
         self.fc2 = nn.Linear(
             self.encoder.encoding_output_shape,
             latent_dim)
