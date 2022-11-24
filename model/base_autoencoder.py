@@ -29,13 +29,11 @@ class BaseAutoEncoder(nn.Module):
         out_z = self.latent_space(x)
         return self.decoder(out_z[0]), *out_z[1:]
 
-    @property
     def encoder_params(self):
         return chain(
             self.encoder.parameters(), 
             self.latent_space.parameters(), 
         )
 
-    @property
     def decoder_params(self):
         return self.decoder.parameters()

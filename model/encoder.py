@@ -55,24 +55,24 @@ class Encoder(nn.Module):
             x = layer(x)
         return x
 
-    # def loss(self, x, y, layer_inds=None):
-    #     if not layer_inds:
-    #         layer_inds = [i for i in range(self.depth)]
-    #     for layer_ind in layer_inds:
-    #         assert layer_ind < self.depth, \
-    #             f'layer={layer_ind} > depth={self.depth}'
-    #     layer_inds = set(layer_inds)
+    def loss(self, x, y, layer_inds=None):
+        if not layer_inds:
+            layer_inds = [i for i in range(self.depth)]
+        for layer_ind in layer_inds:
+            assert layer_ind < self.depth, \
+                f'layer={layer_ind} > depth={self.depth}'
+        layer_inds = set(layer_inds)
 
-    #     batch_size = x.shape[0]
-    #     x = self.input_conv(x)
-    #     y = self.input_conv(y)
-    #     sum = 0
+        batch_size = x.shape[0]
+        x = self.input_conv(x)
+        y = self.input_conv(y)
+        sum = 0
 
-    #     for ind, layer in enumerate(self.layers):
-    #         x = layer(x)
-    #         y = layer(y)
-    #         if ind in layer_inds:
-    #             rx = x.reshape(batch_size, -1)
-    #             ry = y.reshape(batch_size, -1)
-    #             sum = sum + ((rx - ry)**2).sum(-1)
-    #     return sum
+        for ind, layer in enumerate(self.layers):
+            x = layer(x)
+            y = layer(y)
+            if ind in layer_inds:
+                rx = x.reshape(batch_size, -1)
+                ry = y.reshape(batch_size, -1)
+                sum = sum + ((rx - ry)**2).mean(-1)
+        return sum

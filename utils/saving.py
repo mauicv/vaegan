@@ -17,8 +17,8 @@ def setup_models():
         vae = VarAutoEncoder(**cfg['VAE_PARAMS'])
         patch_critic = NLayerDiscriminator(**cfg['PATCH_CRITIC_PARAMS'])
         critic_opt = torch.optim.Adam(critic.parameters(), **cfg['CRITIC_OPT_PARAMS'])
-        enc_opt = torch.optim.Adam(vae.get_encoder_params(), **cfg['ENC_OPT_PARAMS'])
-        dec_opt = torch.optim.Adam(vae.get_decoder_params(), **cfg['DEC_OPT_PARAMS'])
+        enc_opt = torch.optim.Adam(vae.encoder_params(), **cfg['ENC_OPT_PARAMS'])
+        dec_opt = torch.optim.Adam(vae.decoder_params(), **cfg['DEC_OPT_PARAMS'])
         patch_critic_opt = torch.optim.Adam(patch_critic.parameters(), **cfg['PATCH_CRITIC_OPT_PARAMS'])
 
         if cfg['cuda']:
@@ -60,8 +60,8 @@ def setup_models():
             patch_critic.cuda()
 
         critic_opt = torch.optim.Adam(critic.parameters(), **cfg['CRITIC_OPT_PARAMS'])
-        enc_opt = torch.optim.Adam(vae.get_encoder_params(), **cfg['ENC_OPT_PARAMS'])
-        dec_opt = torch.optim.Adam(vae.get_decoder_params(), **cfg['DEC_OPT_PARAMS'])
+        enc_opt = torch.optim.Adam(vae.encoder_params(), **cfg['ENC_OPT_PARAMS'])
+        dec_opt = torch.optim.Adam(vae.decoder_params(), **cfg['DEC_OPT_PARAMS'])
         patch_critic_opt = torch.optim.Adam(patch_critic.parameters(), **cfg['PATCH_CRITIC_OPT_PARAMS'])
 
         data = torch.load(MODEL_PATH)

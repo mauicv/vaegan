@@ -1,3 +1,4 @@
+import numpy as np
 import torch.nn as nn
 from model.encoder import Encoder
 
@@ -12,10 +13,11 @@ class Critic(nn.Module):
         self.encoder = Encoder(
             nc=nc, ndf=ndf, depth=depth,
             img_shape=img_shape)
-        self.fc = nn.Linear(self.encoder.encoding_output_shape, 1)
+        self.fc = nn.Linear(np.prod(self.encoder.output_shape), 1)
 
     def forward(self, x):
         x = self.encoder(x)
+        x = x.reshape(-1, np.prod(self.encoder.output_shape))
         return self.fc(x)
 
     def loss(self, x, y, layers=None):
