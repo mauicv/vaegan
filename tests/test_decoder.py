@@ -10,9 +10,7 @@ def test_us_block():
 
 
 def test_decoder():
-    decoder = Decoder(3, 16, depth=3,
-                      img_shape=(32, 32),
-                      latent_dim=10)
-    t = torch.randn((64, 10))
+    decoder = Decoder(3, 16, depth=2, img_shape=(32, 32))
+    t = torch.randn((64, 64, 8, 8))
     x = decoder(t)
     assert x.shape == (64, 3, 32, 32)

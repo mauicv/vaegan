@@ -14,4 +14,4 @@ def test_encoder():
                       img_shape=(32, 32))
     t = torch.randn((64, 3, 32, 32))
     x = encoder(t)
-    assert x.shape == (64, 4096)
+    assert x.shape == (64, 64, 8, 8)
