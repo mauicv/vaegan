@@ -1,5 +1,5 @@
 import pytest
-from model.autoencoders import AutoEncoder, VarAutoEncoder
+from model.autoencoders import AutoEncoder, VarAutoEncoder, NLLVarAutoEncoder
 import torch
 
 
@@ -35,3 +35,21 @@ def test_var_auto_encoder(res_blocks):
     assert y.shape == t_shape
     assert mu.shape == (64, 516)
     assert logvar.shape == (64, 516)
+
+
+@pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
+def test_nll_var_auto_encoder(res_blocks):
+    autoencoder = NLLVarAutoEncoder(
+        3, 16,
+        latent_dim=None,
+        depth=3,
+        img_shape=(32, 32),
+        res_blocks=res_blocks,
+    )
+
+    t_shape = (64, 3, 32, 32)
+    t = torch.zeros(t_shape)
+    y, mu, logvar = autoencoder(t)
+    assert y.shape == t_shape
+    assert mu.shape == (64, 128, 4, 4)
+    assert logvar.shape == (64, 128, 4, 4)

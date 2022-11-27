@@ -1,4 +1,4 @@
-from model.autoencoders import VarAutoEncoder
+from model.autoencoders import NLLVarAutoEncoder
 from model.critic import Critic
 from model.patch_critic import NLayerDiscriminator
 import torch
@@ -14,7 +14,7 @@ def setup_models():
 
     def new():
         critic = Critic(**cfg['CRITIC_PARAMS'])
-        vae = VarAutoEncoder(**cfg['VAE_PARAMS'])
+        vae = NLLVarAutoEncoder(**cfg['VAE_PARAMS'])
         patch_critic = NLayerDiscriminator(**cfg['PATCH_CRITIC_PARAMS'])
         critic_opt = torch.optim.Adam(critic.parameters(), **cfg['CRITIC_OPT_PARAMS'])
         enc_opt = torch.optim.Adam(vae.encoder_params(), **cfg['ENC_OPT_PARAMS'])
@@ -51,7 +51,7 @@ def setup_models():
     def load():
         critic = Critic(**cfg['CRITIC_PARAMS'])
         patch_critic = NLayerDiscriminator(**cfg['PATCH_CRITIC_PARAMS'])
-        vae = VarAutoEncoder(**cfg['VAE_PARAMS'])
+        vae = NLLVarAutoEncoder(**cfg['VAE_PARAMS'])
 
         # place on device before passing parameters to optimizers!
         if cfg['cuda']:

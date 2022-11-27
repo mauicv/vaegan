@@ -4,7 +4,6 @@ save_rate = 250
 [VAE_PARAMS]
 nc = 3
 ndf = 16
-latent_dim = 2048
 img_shape = [ 128, 128,]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
