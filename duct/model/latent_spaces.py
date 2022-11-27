@@ -1,7 +1,6 @@
 import numpy as np
 import torch.nn as nn
 import torch
-from duct.utils.config_mixin import load_config
 
 
 class LinearLatentSpace(nn.Module):
@@ -58,7 +57,7 @@ class StochasticLinearLatentSpace(nn.Module):
     def reparametrize(self, mu, logvar):
         var = torch.exp(logvar*0.5)
         normal = torch.randn(len(mu), self.latent_dim, requires_grad=True)
-        if load_config()['cuda']: normal = normal.cuda()
+        # if load_config()['cuda']: normal = normal.cuda()
         return normal * var + mu
 
     def forward(self, x):
@@ -92,7 +91,7 @@ class StochasticLatentSpace(nn.Module):
     def reparametrize(self, mu, logvar):
         var = torch.exp(logvar*0.5)
         normal = torch.randn_like(mu, requires_grad=True)
-        if load_config()['cuda']: normal = normal.cuda()
+        # if load_config()['cuda']: normal = normal.cuda()
         return normal * var + mu
 
     def forward(self, x):

@@ -1,0 +1,12 @@
+[critic]
+class = 'Critic'
+nc = 3
+ndf = 16
+img_shape = [ 128, 128,]
+depth = 6
+res_blocks = [0, 1, 0, 1, 1, 0]
+
+[[critic.opt_cfgs]]
+class='Adam'
+name='critic_opt'
+lr = 0.0005

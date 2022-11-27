@@ -1,0 +1,46 @@
+use_cuda = false
+save_rate = 250
+
+[vae]
+class = 'NLLVarAutoEncoder'
+nc = 3
+ndf = 16
+img_shape = [ 128, 128,]
+depth = 6
+res_blocks = [0, 0, 0, 0, 0, 0]
+
+[[vae.opt_cfgs]]
+class='Adam'
+name='vae_enc_opt'
+parameter_set='encoder_params'
+lr = 0.0005
+
+[[vae.opt_cfgs]]
+class='Adam'
+name='vae_dec_opt'
+parameter_set='decoder_params'
+lr = 0.0005
+
+[critic]
+class = 'Critic'
+nc = 3
+ndf = 16
+img_shape = [ 128, 128,]
+depth = 6
+res_blocks = [0, 0, 0, 0, 0, 0]
+
+[[critic.opt_cfgs]]
+class='Adam'
+name='critic_opt'
+lr = 0.0005
+
+[patch_critic]
+class = 'NLayerDiscriminator'
+nc = 3
+ndf = 64
+n_layers = 3
+
+[[patch_critic.opt_cfgs]]
+class='Adam'
+name='patch_critic_opt'
+lr = 0.0005

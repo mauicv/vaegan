@@ -1,0 +1,8 @@
+[vae]
+class = 'VarAutoEncoder'
+nc = 3
+ndf = 16
+img_shape = [ 128, 128,]
+depth = 6
+res_blocks = [0, 0, 0, 0, 0, 0]
+latent_dim = 2024
