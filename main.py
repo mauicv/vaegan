@@ -1,10 +1,9 @@
-import toml
 import click
 from utils.download import download_dataset
 from utils.dataset import get_dataset
 from pprint import pprint
 import matplotlib.pyplot as plt
-from utils.config import load_config
+from utils.config_mixin import load_config
 
 
 @click.group()

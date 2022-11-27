@@ -11,12 +11,14 @@ class BaseAutoEncoder(nn.Module):
             ndf, 
             depth=5, 
             img_shape=(64, 64),
+            res_blocks=tuple(0 for _ in range(5)),
         ):
         super(BaseAutoEncoder, self).__init__()
         self.encoder = Encoder(
             nc=nc, ndf=ndf, depth=depth, 
             img_shape=img_shape,
-            downsample_block_type=DownSampleBatchConv2dBlock
+            res_blocks=res_blocks,
+            downsample_block_type=DownSampleBatchConv2dBlock,
         )
         self.decoder = Decoder(
             nc=nc, ndf=ndf, depth=depth,
@@ -28,6 +30,12 @@ class BaseAutoEncoder(nn.Module):
         x = self.encoder(x)
         out_z = self.latent_space(x)
         return self.decoder(out_z[0]), *out_z[1:]
+
+    def encode(self, x):
+        return self.latent_space(self.encoder(x))
+
+    def decode(self, z):
+        return self.decoder(self.latent_space.decode(z))
 
     def encoder_params(self):
         return chain(

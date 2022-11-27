@@ -1,13 +1,16 @@
+import pytest
 from model.autoencoders import AutoEncoder, VarAutoEncoder
 import torch
 
 
-def test_auto_encoder():
+@pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
+def test_auto_encoder(res_blocks):
     autoencoder = AutoEncoder(
         3, 16,
         latent_dim=516,
         depth=3,
-        img_shape=(32, 32)
+        img_shape=(32, 32),
+        res_blocks=res_blocks,
     )
 
     t_shape = (64, 3, 32, 32)
@@ -16,12 +19,14 @@ def test_auto_encoder():
     y.shape == t_shape
 
 
-def test_var_auto_encoder():
+@pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
+def test_var_auto_encoder(res_blocks):
     autoencoder = VarAutoEncoder(
         3, 16,
         latent_dim=516,
         depth=3,
-        img_shape=(32, 32)
+        img_shape=(32, 32),
+        res_blocks=res_blocks,
     )
 
     t_shape = (64, 3, 32, 32)

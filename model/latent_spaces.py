@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch
 from torch.autograd import Variable
 
-from utils.config import load_config
+from utils.config_mixin import load_config
 
 
 class LatentSpace(nn.Module):

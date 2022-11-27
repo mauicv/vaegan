@@ -1,0 +1,2 @@
+class SaveMixin:
+    pass

@@ -3,7 +3,7 @@ from model.critic import Critic
 from model.patch_critic import NLayerDiscriminator
 import torch
 from pathlib import Path
-from utils.config import load_config
+from utils.config_mixin import load_config
 
 
 def setup_models():
@@ -73,13 +73,13 @@ def setup_models():
         dec_opt.load_state_dict(data['dec_opt_state_dict'])
         patch_critic_opt.load_state_dict(data['patch_critic_opt_state_dict'])
 
-        for key, val in critic_opt.state.items():
+        for _, val in critic_opt.state.items():
             val['step'] = val['step'].cpu()
-        for key, val in enc_opt.state.items():
+        for _, val in enc_opt.state.items():
             val['step'] = val['step'].cpu()
-        for key, val in dec_opt.state.items():
+        for _, val in dec_opt.state.items():
             val['step'] = val['step'].cpu()
-        for key, val in patch_critic_opt.state.items():
+        for _, val in patch_critic_opt.state.items():
             val['step'] = val['step'].cpu()
 
         return {

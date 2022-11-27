@@ -7,12 +7,14 @@ ndf = 16
 latent_dim = 2048
 img_shape = [ 128, 128,]
 depth = 6
+res_blocks = [0, 0, 0, 0, 0, 0]
 
 [CRITIC_PARAMS]
 nc = 3
 ndf = 32
 img_shape = [ 128, 128,]
 depth = 6
+res_blocks = [0, 0, 0, 0, 0, 0]
 
 [ENC_OPT_PARAMS]
 lr = 0.0005

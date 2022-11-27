@@ -1,5 +1,6 @@
 import torch.nn as nn
 import numpy as np
+from model.resnet import ResnetBlock
 
 
 class DownSampleInstanceConv2dBlock(nn.Module):
@@ -28,9 +29,13 @@ class Encoder(nn.Module):
     def __init__(
             self, nc, ndf, depth=5,
             img_shape=(32, 32),
+            res_blocks=tuple(0 for _ in range(5)),
             downsample_block_type=DownSampleInstanceConv2dBlock
         ):
         super(Encoder, self).__init__()
+
+        assert len(res_blocks) == depth, 'len(res_blocks) != depth'
+
         self.nc = nc
         self.ndf = ndf
         self.depth = depth
@@ -39,9 +44,15 @@ class Encoder(nn.Module):
         layers = nn.ModuleList()
 
         ndf_cur = ndf
-        for _ in range(self.depth):
+        for ind in range(self.depth):
             in_filters = ndf_cur
             ndf_cur = ndf_cur * 2
+            for _ in range(res_blocks[ind]):
+                layers.append(ResnetBlock(
+                    in_channels=in_filters, 
+                    out_channels=ndf_cur
+                ))
+                in_filters = ndf_cur
             img_shape = (tuple(int(d/2) for d in img_shape))
             layers.append(
                 downsample_block_type(in_filters, ndf_cur))
