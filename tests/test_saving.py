@@ -1,4 +1,4 @@
-from utils.saving import setup_models
+from duct.utils.saving import setup_models
 import torch
 
 

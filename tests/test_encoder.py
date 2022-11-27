@@ -1,6 +1,6 @@
 
 import pytest
-from model.encoder import Encoder, DownSampleInstanceConv2dBlock
+from duct.model.encoder import Encoder, DownSampleInstanceConv2dBlock
 import torch
 
 

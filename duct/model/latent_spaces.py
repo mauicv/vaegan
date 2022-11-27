@@ -1,7 +1,7 @@
 import numpy as np
 import torch.nn as nn
 import torch
-from utils.config_mixin import load_config
+from duct.utils.config_mixin import load_config
 
 
 class LinearLatentSpace(nn.Module):

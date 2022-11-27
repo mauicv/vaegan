@@ -1,6 +1,6 @@
 import pytest
 import torch
-from model.resnet import ResnetBlock
+from duct.model.resnet import ResnetBlock
 
 
 @pytest.mark.parametrize("conv_shortcut", [True, False])

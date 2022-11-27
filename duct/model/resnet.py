@@ -6,7 +6,7 @@ See https://github.com/CompVis/taming-transformers
 import torch
 import torch.nn as nn
 from torch.nn import Module
-from model.activations import nonlinearity
+from duct.model.activations import nonlinearity
 
 
 def Normalize(in_channels):

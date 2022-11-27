@@ -1,6 +1,6 @@
 import pytest
 import torch
-from model.critic import Critic
+from duct.model.critic import Critic
 
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])

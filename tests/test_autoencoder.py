@@ -1,5 +1,5 @@
 import pytest
-from model.autoencoders import AutoEncoder, VarAutoEncoder, NLLVarAutoEncoder
+from duct.model.autoencoders import AutoEncoder, VarAutoEncoder, NLLVarAutoEncoder
 import torch
 
 

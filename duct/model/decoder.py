@@ -1,6 +1,6 @@
 import torch.nn as nn
 import numpy as np
-from model.resnet import ResnetBlock
+from duct.model.resnet import ResnetBlock
 
 class UpSampleBatchConvBlock(nn.Module):
     def __init__(self, in_filters, out_filters):

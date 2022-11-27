@@ -1,5 +1,5 @@
 import torch
-from model.latent_spaces import LinearLatentSpace, StochasticLinearLatentSpace, \
+from duct.model.latent_spaces import LinearLatentSpace, StochasticLinearLatentSpace, \
     StochasticLatentSpace
 
 

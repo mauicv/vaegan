@@ -1,6 +1,6 @@
 import torch.nn as nn
-from model.decoder import Decoder, UpSampleBatchConvBlock
-from model.encoder import Encoder, DownSampleBatchConv2dBlock
+from duct.model.decoder import Decoder, UpSampleBatchConvBlock
+from duct.model.encoder import Encoder, DownSampleBatchConv2dBlock
 from itertools import chain
 
 

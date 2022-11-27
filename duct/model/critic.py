@@ -1,6 +1,6 @@
 import numpy as np
 import torch.nn as nn
-from model.encoder import Encoder
+from duct.model.encoder import Encoder
 
 class Critic(nn.Module):
     def __init__(

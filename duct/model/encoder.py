@@ -1,6 +1,6 @@
 import torch.nn as nn
 import numpy as np
-from model.resnet import ResnetBlock
+from duct.model.resnet import ResnetBlock
 
 
 class DownSampleInstanceConv2dBlock(nn.Module):

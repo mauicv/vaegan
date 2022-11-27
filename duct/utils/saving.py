@@ -1,9 +1,9 @@
-from model.autoencoders import NLLVarAutoEncoder
-from model.critic import Critic
-from model.patch_critic import NLayerDiscriminator
+from duct.model.autoencoders import NLLVarAutoEncoder
+from duct.model.critic import Critic
+from duct.model.patch_critic import NLayerDiscriminator
 import torch
 from pathlib import Path
-from utils.config_mixin import load_config
+from duct.utils.config_mixin import load_config
 
 
 def setup_models():

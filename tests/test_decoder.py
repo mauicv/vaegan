@@ -1,5 +1,5 @@
 import pytest
-from model.decoder import Decoder, UpSampleBatchConvBlock
+from duct.model.decoder import Decoder, UpSampleBatchConvBlock
 import torch
 
 
