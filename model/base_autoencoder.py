@@ -23,6 +23,7 @@ class BaseAutoEncoder(nn.Module):
         self.decoder = Decoder(
             nc=nc, ndf=ndf, depth=depth,
             img_shape=img_shape,
+            res_blocks=res_blocks,
             upsample_block_type=UpSampleBatchConvBlock
         )
 

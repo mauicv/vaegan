@@ -1,3 +1,4 @@
+import pytest
 from model.decoder import Decoder, UpSampleBatchConvBlock
 import torch
 
@@ -9,8 +10,9 @@ def test_us_block():
     assert dst.shape == (64, 3, 64, 64)
 
 
-def test_decoder():
-    decoder = Decoder(3, 16, depth=2, img_shape=(32, 32))
-    t = torch.randn((64, 64, 8, 8))
+@pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 1)])
+def test_decoder(res_blocks):
+    decoder = Decoder(3, 16, depth=3, img_shape=(32, 32), res_blocks=res_blocks)
+    t = torch.randn((64, 128, 8, 8))
     x = decoder(t)
-    assert x.shape == (64, 3, 32, 32)
+    assert x.shape == (64, 3, 64, 64)
