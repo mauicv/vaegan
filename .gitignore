@@ -2,7 +2,7 @@
 venv
 models
 __pycache__
-dataset
+datasets
 .ipynb_checkpoints
 saved
 .pytet_cache
