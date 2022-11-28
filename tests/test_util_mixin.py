@@ -67,3 +67,38 @@ def test_util_mixin_patch_critic(tmp_path):
     path = tmp_path / 'model.pt'
     a.save_state(path)
     a.load_state(path)
+
+
+def test_util_mixin_from_toml(tmp_path):
+    toml_str = '''
+    [vae]
+    class = 'NLLVarAutoEncoder'
+    nc = 3
+    ndf = 16
+    img_shape = [ 128, 128,]
+    depth = 6
+    res_blocks = [0, 0, 0, 0, 0, 0]
+
+    [[vae.opt_cfgs]]
+    class='Adam'
+    name='vae_enc_opt'
+    parameter_set='encoder_params'
+    lr = 0.0005
+
+    [[vae.opt_cfgs]]
+    class='Adam'
+    name='vae_dec_opt'
+    parameter_set='decoder_params'
+    lr = 0.0005
+    '''
+
+    a = A.from_toml(toml_str)
+    assert a.vae.encoder.nc == 3
+    assert isinstance(a.vae, NLLVarAutoEncoder)
+    assert isinstance(a.vae_enc_opt, Adam)
+    assert isinstance(a.vae_dec_opt, Adam)
+    assert a.optimizers == ['vae_enc_opt', 'vae_dec_opt']
+
+    path = tmp_path / 'model.pt'
+    a.save_state(path)
+    a.load_state(path)

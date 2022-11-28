@@ -20,6 +20,10 @@ class UtilMixin:
     def from_file(cls, path='./config.toml'):
         return cls(load_config(path))
 
+    @classmethod
+    def from_toml(cls, toml_data_str):
+        return cls(toml.loads(toml_data_str))
+
     def __getattr__(self, __name: str):
         return self.cfg[__name]
 
