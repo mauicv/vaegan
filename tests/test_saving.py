@@ -5,7 +5,6 @@ import torch
 def test_saving(tmp_path):
 
     test_class = UtilMixin.from_file(path='./tests/test_configs/config.toml')
-    test_class.load()
     assert test_class.models == ['vae', 'critic', 'patch_critic']
     assert test_class.optimizers == ['vae_enc_opt', 'vae_dec_opt', 'critic_opt', 'patch_critic_opt']
 
@@ -34,7 +33,6 @@ def test_saving(tmp_path):
     models = None
 
     test_class2 = UtilMixin.from_file(path='./tests/test_configs/config.toml')
-    test_class2.load()
     assert test_class2.models == ['vae', 'critic', 'patch_critic']
     assert test_class2.optimizers == ['vae_enc_opt', 'vae_dec_opt', 'critic_opt', 'patch_critic_opt']
 

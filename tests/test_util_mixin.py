@@ -13,8 +13,6 @@ class A(UtilMixin):
 
 def test_util_mixin_nll_vae(tmp_path):
     a = A.from_file(path='./tests/test_configs/nll_vae.toml')
-    assert a.vae['nc'] == 3
-    a.load()
     assert a.vae.encoder.nc == 3
     assert isinstance(a.vae, NLLVarAutoEncoder)
     assert isinstance(a.vae_enc_opt, Adam)
@@ -29,8 +27,6 @@ def test_util_mixin_nll_vae(tmp_path):
 
 def test_util_mixin_vae(tmp_path):
     a = A.from_file(path='./tests/test_configs/vae.toml')
-    assert a.vae['nc'] == 3
-    a.load()
     assert a.vae.encoder.nc == 3
     assert isinstance(a.vae, VarAutoEncoder)
     with pytest.raises(KeyError):
@@ -43,8 +39,6 @@ def test_util_mixin_vae(tmp_path):
 
 def test_util_mixin_ae(tmp_path):
     a = A.from_file(path='./tests/test_configs/ae.toml')
-    assert a.ae['nc'] == 3
-    a.load()
     assert a.ae.encoder.nc == 3
     assert isinstance(a.ae, AutoEncoder)
     assert isinstance(a.ae_opt, Adam)
@@ -56,8 +50,6 @@ def test_util_mixin_ae(tmp_path):
 
 def test_util_mixin_critic(tmp_path):
     a = A.from_file(path='./tests/test_configs/critic.toml')
-    assert a.critic['nc'] == 3
-    a.load()
     assert a.critic.encoder.nc == 3
     assert isinstance(a.critic, Critic)
     assert isinstance(a.critic_opt, Adam)
@@ -69,8 +61,6 @@ def test_util_mixin_critic(tmp_path):
 
 def test_util_mixin_patch_critic(tmp_path):
     a = A.from_file(path='./tests/test_configs/patch_critic.toml')
-    assert a.patch_critic['nc'] == 3
-    a.load()
     assert isinstance(a.patch_critic, NLayerDiscriminator)
     assert isinstance(a.patch_critic_opt, Adam)
 

@@ -14,6 +14,7 @@ class UtilMixin:
         self.sateful_objs = []
         self.models = []
         self.optimizers = []
+        self.make()
 
     @classmethod
     def from_file(cls, path='./config.toml'):
@@ -28,7 +29,7 @@ class UtilMixin:
                 return True
         return False
 
-    def load(self):
+    def make(self):
         for key in self.cfg:
             if self.check_if_model_cfg(self.cfg[key]):
                 model_cfg = self.cfg[key]
