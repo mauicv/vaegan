@@ -38,14 +38,16 @@ def unzip_dataset(path='datasets', target='./'):
 
     path = Path(path) / 'celeba'
     target_path = Path(target)
+    target_path.mkdir(exist_ok=True)
 
     shutil.copyfile(
         path / 'identity_CelebA.txt', 
-        Path(target) / 'identity_CelebA.txt'
+        target_path / 'identity_CelebA.txt'
     )
 
     target_loc_imgs = path / 'img_align_celeba.zip'
-    if not target_path.is_dir():
-        with zipfile.ZipFile(target_loc_imgs, 'r') as ziphandler:
-            ziphandler.extractall(target_path)
+
+    with zipfile.ZipFile(target_loc_imgs, 'r') as ziphandler:
+        ziphandler.extractall(target_path)
+
     return str(target_path)
