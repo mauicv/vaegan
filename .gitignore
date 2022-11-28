@@ -6,3 +6,5 @@ dataset
 .ipynb_checkpoints
 saved
 .pytet_cache
+Duct_2d.egg-info
+build
