@@ -34,7 +34,7 @@ class CelebADataset(Dataset):
         return image
 
 
-def get_dataset(path='./datasets/celeba', img_shape=(128, 128)):
+def get_dataset(path='./datasets/celeba', img_shape=(128, 128), batch_size=64):
     path = Path(path) 
     if not (path / 'img_align_celeba').is_dir():
         raise ValueError('Dataset not downloaded or unzipped')
@@ -51,7 +51,7 @@ def get_dataset(path='./datasets/celeba', img_shape=(128, 128)):
     )
 
     loader = torch.utils.data.DataLoader(dataset=dataset,
-                                         batch_size=64,
+                                         batch_size=batch_size,
                                          shuffle=True,
                                          drop_last=True)
 

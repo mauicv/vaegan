@@ -69,9 +69,6 @@ class Encoder(nn.Module):
     def loss(self, x, y, layer_inds=None):
         if not layer_inds:
             layer_inds = [i for i in range(self.depth)]
-        for layer_ind in layer_inds:
-            assert layer_ind < self.depth, \
-                f'layer={layer_ind} > depth={self.depth}'
         layer_inds = set(layer_inds)
 
         batch_size = x.shape[0]
