@@ -33,12 +33,11 @@ def download_dataset(dl_loc='datasets/'):
             quiet=False
         )
 
-def unzip_dataset(path='datasets'):
+def unzip_dataset(path='datasets', target='./'):
     path = Path(path) / 'celeba'
+    target_path = Path(target) / 'img_align_celeba'
     target_loc_imgs = path / 'img_align_celeba.zip'
-    target_loc_unzipped_imgs = path / 'img_align_celeba'
-    if not target_loc_unzipped_imgs.is_dir():
+    if not target_path.is_dir():
         with zipfile.ZipFile(target_loc_imgs, 'r') as ziphandler:
-            ziphandler.extractall(target_loc_unzipped_imgs)
-
-    return str(target_loc_imgs)
+            ziphandler.extractall(target_path)
+    return str(target_path)
