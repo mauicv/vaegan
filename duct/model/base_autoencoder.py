@@ -30,7 +30,7 @@ class BaseAutoEncoder(nn.Module):
     def forward(self, x):
         x = self.encoder(x)
         out_z = self.latent_space(x)
-        return self.decoder(out_z[0]), *out_z[1:]
+        return (self.decoder(out_z[0]), *out_z[1:])
 
     def encode(self, x):
         return self.latent_space(self.encoder(x))
