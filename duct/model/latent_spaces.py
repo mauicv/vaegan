@@ -57,7 +57,7 @@ class StochasticLinearLatentSpace(nn.Module):
     def reparametrize(self, mu, logvar):
         var = torch.exp(logvar*0.5)
         normal = torch.randn(len(mu), self.latent_dim, requires_grad=True)
-        # if load_config()['cuda']: normal = normal.cuda()
+        if next(self.parameters()).is_cuda: normal = normal.cuda()
         return normal * var + mu
 
     def forward(self, x):
@@ -91,7 +91,7 @@ class StochasticLatentSpace(nn.Module):
     def reparametrize(self, mu, logvar):
         var = torch.exp(logvar*0.5)
         normal = torch.randn_like(mu, requires_grad=True)
-        # if load_config()['cuda']: normal = normal.cuda()
+        if next(self.parameters()).is_cuda: normal = normal.cuda()
         return normal * var + mu
 
     def forward(self, x):
