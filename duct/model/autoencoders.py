@@ -46,6 +46,11 @@ class VarAutoEncoder(BaseAutoEncoder):
             latent_dim=latent_dim
         )
 
+    def call(self, x):
+        x = self.encoder(x)
+        out_z = self.latent_space(x)
+        return self.decoder(out_z[0])
+
 
 class NLLVarAutoEncoder(BaseAutoEncoder):
     def __init__(
@@ -69,3 +74,8 @@ class NLLVarAutoEncoder(BaseAutoEncoder):
             output_shape=self.decoder.input_shape, 
             latent_dim=latent_dim
         )
+
+    def call(self, x):
+        x = self.encoder(x)
+        out_z = self.latent_space(x)
+        return self.decoder(out_z[0])

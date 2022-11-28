@@ -36,6 +36,8 @@ def test_var_auto_encoder(res_blocks):
     assert mu.shape == (64, 516)
     assert logvar.shape == (64, 516)
 
+    autoencoder.call(t).shape == t_shape
+
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
 def test_nll_var_auto_encoder(res_blocks):
@@ -53,3 +55,5 @@ def test_nll_var_auto_encoder(res_blocks):
     assert y.shape == t_shape
     assert mu.shape == (64, 128, 4, 4)
     assert logvar.shape == (64, 128, 4, 4)
+
+    autoencoder.call(t).shape == t_shape
