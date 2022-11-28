@@ -37,7 +37,7 @@ def download_dataset(dl_loc='datasets/'):
 def unzip_dataset(path='datasets', target='./'):
 
     path = Path(path) / 'celeba'
-    target_path = Path(target) / 'img_align_celeba'
+    target_path = Path(target)
 
     shutil.copyfile(
         path / 'identity_CelebA.txt', 
