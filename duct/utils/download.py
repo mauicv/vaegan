@@ -19,7 +19,7 @@ def download_dataset():
     else:
         gdown.download(
             dataset_url,
-            target_loc_imgs,
+            str(target_loc_imgs),
             quiet=False
         )
 
@@ -29,7 +29,7 @@ def download_dataset():
     else:
         gdown.download(
             annotate_url,
-            target_loc_idents,
+            str(target_loc_idents),
             quiet=False
         )
 
