@@ -35,7 +35,8 @@ class CelebADataset(Dataset):
 
 
 def get_dataset(path='./datasets/celeba', img_shape=(3, 128, 128)):
-    if not Path(path / 'img_align_celeba.zip').is_file():
+    path = Path(path) 
+    if not (path / 'img_align_celeba.zip').is_file():
         raise ValueError('Dataset not downloaded')
 
     dataset = CelebADataset(
