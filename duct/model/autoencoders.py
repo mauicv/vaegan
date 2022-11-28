@@ -1,7 +1,6 @@
 from duct.model.latent_spaces import LinearLatentSpace, StochasticLinearLatentSpace, \
     StochasticLatentSpace
 from duct.model.base_autoencoder import BaseAutoEncoder
-import torch.nn as nn
 
 
 class AutoEncoder(BaseAutoEncoder):
