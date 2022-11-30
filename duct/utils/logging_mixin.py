@@ -43,12 +43,12 @@ class LoggingMixin(ExperimentBase):
 
     @property
     def log_dir(self):
-        return Path(self.name) / Path('logs')
+        return self._path / Path('logs')
 
     @property
     def csv_filepath(self):
-        return Path(self.name) / Path('logs') / Path('experiment.csv')
+        return self.log_dir / Path('experiment.csv')
 
     @property
     def imgs_path(self):
-        return Path(self.name) / Path('logs') / Path('imgs')
+        return self.log_dir / Path('imgs')

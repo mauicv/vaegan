@@ -5,7 +5,7 @@ from duct.utils.experiment_base import ExperimentBase
 from pathlib import Path
 
 
-def load_config(path='./config.toml'):
+def load_config(path):
     return toml.load(path)
 
 
@@ -20,9 +20,14 @@ class ConfigMixin(ExperimentBase):
         self.make()
 
     @classmethod
+    def init(cls):
+        assert cls.path is not None, \
+            'path must be set on class'
+        path = Path(cls.path) / Path(cls.name) / 'config.toml'
+        return cls(load_config(path))
+
+    @classmethod
     def from_file(cls, path=None):
-        if path is None:
-            path = cls.default_cfg_path
         return cls(load_config(path))
 
     @classmethod
@@ -30,12 +35,8 @@ class ConfigMixin(ExperimentBase):
         return cls(toml.loads(toml_data_str))
 
     @property
-    def default_cfg_path(self):
-        return Path(self.name) / 'config.toml'
-
-    @property
-    def default_model_path(self):
-        return Path(self.name) / 'models' / 'state.pt'
+    def _model_path(self):
+        return self._path / 'models' / 'state.pt'
 
     def __getattr__(self, __name: str):
         if __name == 'cfg':
@@ -85,7 +86,7 @@ class ConfigMixin(ExperimentBase):
 
     def load_state(self, path=None):
         if path is None:
-            path = self.default_model_path
+            path = self._model_path
         data = torch.load(path)
         for key in self.sateful_objs:
             obj = getattr(self, key)
@@ -97,7 +98,7 @@ class ConfigMixin(ExperimentBase):
 
     def save_state(self, path=None):
         if path is None:
-            path = self.default_model_path
+            path = self._model_path
             path.parent.mkdir(parents=True, exist_ok=True)
         data = {
             key: getattr(self, key).state_dict() \

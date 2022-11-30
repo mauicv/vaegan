@@ -3,10 +3,11 @@ from duct.utils.save_imgs import save_img_pairs
 import torch
 
 
-def test_logger(tmp_path):
+def test_logger_csv(tmp_path):
     class Exp(LoggingMixin):
-        name = str(tmp_path)
-        headers = ['test', 'test2']
+        path=str(tmp_path)
+        name='test'
+        headers=['test', 'test2']
 
     exp = Exp()
     exp.setup_logs()
@@ -30,9 +31,10 @@ def test_logger(tmp_path):
     assert exp.row_count == 2
 
 
-def test_logger(tmp_path):
+def test_logger_imgs(tmp_path):
     class Exp(LoggingMixin):
-        name = str(tmp_path)
+        path=str(tmp_path)
+        name='test'
         headers = ['test', 'test2']
         img_save_hook = save_img_pairs
 
