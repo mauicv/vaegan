@@ -1,4 +1,4 @@
-from duct.utils.util_mixin import UtilMixin
+from duct.utils.config_mixin import ConfigMixin
 from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
@@ -6,13 +6,15 @@ from torch.optim import Adam
 import pytest
 
 
-class A(UtilMixin):
-        def __init__(self, cfg):
-            super().__init__(cfg)
+class Experiment(ConfigMixin):
+    name = 'test'
+
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
 
 def test_util_mixin_nll_vae(tmp_path):
-    a = A.from_file(path='./tests/test_configs/nll_vae.toml')
+    a = Experiment.from_file(path='./tests/test_configs/nll_vae.toml')
     assert a.vae.encoder.nc == 3
     assert isinstance(a.vae, NLLVarAutoEncoder)
     assert isinstance(a.vae_enc_opt, Adam)
@@ -26,7 +28,7 @@ def test_util_mixin_nll_vae(tmp_path):
 
 
 def test_util_mixin_vae(tmp_path):
-    a = A.from_file(path='./tests/test_configs/vae.toml')
+    a = Experiment.from_file(path='./tests/test_configs/vae.toml')
     assert a.vae.encoder.nc == 3
     assert isinstance(a.vae, VarAutoEncoder)
     with pytest.raises(KeyError):
@@ -38,7 +40,7 @@ def test_util_mixin_vae(tmp_path):
 
 
 def test_util_mixin_ae(tmp_path):
-    a = A.from_file(path='./tests/test_configs/ae.toml')
+    a = Experiment.from_file(path='./tests/test_configs/ae.toml')
     assert a.ae.encoder.nc == 3
     assert isinstance(a.ae, AutoEncoder)
     assert isinstance(a.ae_opt, Adam)
@@ -49,7 +51,7 @@ def test_util_mixin_ae(tmp_path):
 
 
 def test_util_mixin_critic(tmp_path):
-    a = A.from_file(path='./tests/test_configs/critic.toml')
+    a = Experiment.from_file(path='./tests/test_configs/critic.toml')
     assert a.critic.encoder.nc == 3
     assert isinstance(a.critic, Critic)
     assert isinstance(a.critic_opt, Adam)
@@ -60,7 +62,7 @@ def test_util_mixin_critic(tmp_path):
 
 
 def test_util_mixin_patch_critic(tmp_path):
-    a = A.from_file(path='./tests/test_configs/patch_critic.toml')
+    a = Experiment.from_file(path='./tests/test_configs/patch_critic.toml')
     assert isinstance(a.patch_critic, NLayerDiscriminator)
     assert isinstance(a.patch_critic_opt, Adam)
 
@@ -92,7 +94,7 @@ def test_util_mixin_from_toml(tmp_path):
     lr = 0.0005
     '''
 
-    a = A.from_toml(toml_str)
+    a = Experiment.from_toml(toml_str)
     assert a.vae.encoder.nc == 3
     assert isinstance(a.vae, NLLVarAutoEncoder)
     assert isinstance(a.vae_enc_opt, Adam)

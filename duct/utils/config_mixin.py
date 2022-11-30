@@ -1,14 +1,17 @@
 import toml
 from duct.model import ModelRegistry
 import torch
+from duct.utils.experiment_base import ExperimentBase
+from pathlib import Path
 
 
 def load_config(path='./config.toml'):
     return toml.load(path)
 
 
-class UtilMixin:
+class ConfigMixin(ExperimentBase):
     def __init__(self, cfg):
+        super().__init__()
         self.cfg = cfg
         self.model_registry = ModelRegistry()
         self.sateful_objs = []
@@ -17,15 +20,29 @@ class UtilMixin:
         self.make()
 
     @classmethod
-    def from_file(cls, path='./config.toml'):
+    def from_file(cls, path=None):
+        if path is None:
+            path = cls.default_cfg_path
         return cls(load_config(path))
 
     @classmethod
     def from_toml(cls, toml_data_str):
         return cls(toml.loads(toml_data_str))
 
+    @property
+    def default_cfg_path(self):
+        return Path(self.name) / 'config.toml'
+
+    @property
+    def default_model_path(self):
+        return Path(self.name) / 'models' / 'state.pt'
+
     def __getattr__(self, __name: str):
-        return self.cfg[__name]
+        if __name == 'cfg':
+            return None
+        elif getattr(self, 'cfg', None) is not None:
+            return self.cfg[__name]
+        raise AttributeError("can't get attribute")
 
     def check_if_model_cfg(self, cfg):
         if isinstance(cfg, dict) and 'class' in cfg:
@@ -66,7 +83,9 @@ class UtilMixin:
         self.sateful_objs.append(opt_name)
         self.optimizers.append(opt_name)
 
-    def load_state(self, path='./saving/state.pt'):
+    def load_state(self, path=None):
+        if path is None:
+            path = self.default_model_path
         data = torch.load(path)
         for key in self.sateful_objs:
             obj = getattr(self, key)
@@ -76,7 +95,10 @@ class UtilMixin:
                 for _, val in obj.state.items():
                     val['step'] = val['step'].cpu()
 
-    def save_state(self, path='./saving/state.pt'):
+    def save_state(self, path=None):
+        if path is None:
+            path = self.default_model_path
+            path.parent.mkdir(parents=True, exist_ok=True)
         data = {
             key: getattr(self, key).state_dict() \
                 for key in self.sateful_objs   
