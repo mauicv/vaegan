@@ -16,12 +16,14 @@ class LoggingMixin(ExperimentBase):
     def setup_logs(self):
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.csv_filepath.touch(exist_ok=True)
-        self.imgs_path.mkdir(parents=True, exist_ok=True)
         if self.csv_filepath.stat().st_size == 0:
             with self.csv_filepath.open('w') as f:
                 writer = csv.writer(f)
                 writer.writerow(self.headers)
                 self.row_count = 0
+        else:
+            self.row_count = sum(1 for _ in self.load_logs())
+        self.imgs_path.mkdir(parents=True, exist_ok=True)
 
     def log(self, dict):
         with self.csv_filepath.open('a') as f:
