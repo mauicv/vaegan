@@ -40,6 +40,7 @@ class LoggingMixin(ExperimentBase):
                 yield row
 
     def save_imgs(self, *args, **kwargs):
+        self.img_count += 1
         if self.img_save_hook is not None:
             self.img_save_hook(*args, **kwargs)
 
