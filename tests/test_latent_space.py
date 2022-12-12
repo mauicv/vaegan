@@ -1,6 +1,6 @@
 import torch
 from duct.model.latent_spaces import LinearLatentSpace, StochasticLinearLatentSpace, \
-    StochasticLatentSpace
+    StochasticLatentSpace, VQLatentSpace
 
 
 def test_linear_latent_space():
@@ -24,3 +24,30 @@ def test_stochastic_latent_space():
     assert in_tensor.shape == out_tensor.shape
     assert mu.shape == out_tensor.shape
     assert logvar.shape == out_tensor.shape
+
+def test_vq_latent_space():
+    latent_space = VQLatentSpace(num_embeddings=10, embedding_dim=64, commitment_cost=1)
+    in_tensor = torch.randn((64, 64, 2, 2))
+    output, loss, _, encoded = latent_space(in_tensor)
+    assert output.shape == (64, 64, 2, 2)
+    assert loss.shape == ()
+    assert encoded.shape == (64, 2, 2, 10)
+
+
+def test_vq_latent_space_usage_reset():
+    torch.manual_seed(0)
+    num_embeddings = 256
+    latent_space = VQLatentSpace(num_embeddings=num_embeddings, embedding_dim=64, commitment_cost=1)
+    in_tensor = torch.randn((16, 64, 8, 8))
+    _, _, _, _ = latent_space(in_tensor)
+    missed_indcies = [k for k, v in latent_space.usage_counts.items() if v < 100]
+    assert len(missed_indcies) > 0
+    vectors_1 = latent_space._embedding.weight[missed_indcies]
+    for _ in range(99):
+        _, _, _, _ = latent_space(in_tensor)
+
+    for ind in missed_indcies:
+        assert latent_space.usage_counts[ind] == 100
+
+    vectors_2 = latent_space._embedding.weight[missed_indcies]
+    assert not torch.all(vectors_1 == vectors_2)

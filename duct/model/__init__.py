@@ -1,4 +1,5 @@
-from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder
+from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder, \
+    VQVarAutoEncoder
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 
@@ -11,7 +12,8 @@ class ModelRegistry:
             'Critic': Critic,
             'NLayerDiscriminator': NLayerDiscriminator,
             'VarAutoEncoder': VarAutoEncoder,
-            'AutoEncoder': AutoEncoder
+            'AutoEncoder': AutoEncoder,
+            'VQVarAutoEncoder': VQVarAutoEncoder
         }
 
     def __getitem__(self, item):
