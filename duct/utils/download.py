@@ -2,10 +2,26 @@ import zipfile
 from pathlib import Path
 import gdown
 import shutil
+import requests
+import tqdm
 
 
-def download_dataset(dl_loc='datasets/'):
-    path = Path(dl_loc)
+def download(target='celeba', path='datasets/'):
+    _ = {
+        'celeba': download_celeba,
+        'fma_small': download_fma_small,
+    }[target](path=path)
+
+
+def unzip(target='celeba', path='datasets/', target_path='./' ):
+    _ = {
+        'celeba': unzip_celeba,
+        'fma_small': unzip_fma_small,
+    }[target](path=path, target=target_path)
+
+
+def download_celeba(path='datasets/'):
+    path = Path(path)
     path.mkdir(exist_ok=True)
     path = path / 'celeba'
     path.mkdir(exist_ok=True)
@@ -34,7 +50,8 @@ def download_dataset(dl_loc='datasets/'):
             quiet=False
         )
 
-def unzip_dataset(path='datasets', target='./'):
+
+def unzip_celeba(path='datasets', target='./'):
 
     path = Path(path) / 'celeba'
     target_path = Path(target)
@@ -46,8 +63,38 @@ def unzip_dataset(path='datasets', target='./'):
     )
 
     target_loc_imgs = path / 'img_align_celeba.zip'
-
     with zipfile.ZipFile(target_loc_imgs, 'r') as ziphandler:
         ziphandler.extractall(target_path)
 
     return str(target_path)
+
+
+def download_fma_small(path='datasets'):
+    path = Path(path)
+    path.mkdir(exist_ok=True)
+    path = path / 'fma_small'
+    path.mkdir(exist_ok=True)
+
+    target_loc_imgs = path / 'fma_small.zip'
+    base_url = 'https://os.unil.cloud.switch.ch/fma/fma_small.zip'
+    if target_loc_imgs.is_file():
+        print('Dataset already downloaded')
+    else:
+        download_zip_file(base_url, target_loc_imgs)
+
+
+def download_zip_file(url, fname):
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(fname, 'wb') as f:
+            for chunk in tqdm.tqdm(r.iter_content(chunk_size=8192)):
+                f.write(chunk)
+
+
+def unzip_fma_small(path='./datasets', target='./datasets/fma_small/'):
+    path = Path(path) / 'fma_small'
+    target_path = Path(target)
+    target_path.mkdir(exist_ok=True)
+    target_loc_imgs = path / 'fma_small.zip'
+    with zipfile.ZipFile(target_loc_imgs, 'r') as ziphandler:
+        ziphandler.extractall(target_path)
