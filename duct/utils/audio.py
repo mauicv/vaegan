@@ -8,7 +8,7 @@ import random
 import torch
 import torchaudio
 from torchaudio import transforms
-from IPython.display import Audio
+# from IPython.display import Audio
 
 # todo: randomize this for each __get_item__ call
 FRAME_OFFSET = 16000
@@ -20,7 +20,8 @@ class AudioUtil():
         sig, sr = torchaudio.load(
             audio_file, 
             frame_offset=FRAME_OFFSET, 
-            num_frames=num_frames)
+            num_frames=num_frames,
+            format="mp3")
         return (sig, sr)
 
     @staticmethod

@@ -7,9 +7,7 @@ from torchvision.io import read_image
 import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
-import torchaudio
 import os
-import random
 
 
 def get_dataset(target='celeba', path='./datasets/celeba', batch_size=64, **kwargs):
@@ -75,11 +73,11 @@ def build_index(path='fma_small'):
     index = {}
     count = 0
     for item in dirs:
-        if item == 'checksums' or item == 'README.txt':
+        if item == 'checksums' or item == 'README.txt' or item == '.DS_Store':
             continue
         files = os.listdir(f'{path}/{item}')
         for filename in files:
-            index[count] = f'{path}/{item}/{filename}'
+            index[count] = f'./{path}/{item}/{filename}'
             count += 1
     return index
 
@@ -94,23 +92,23 @@ class FMASmallDataset(Dataset):
         return len(self.index)
 
     def __getitem__(self, idx):
-        try:
-            aud = AudioUtil.open(self.index[idx], 5*self.duration)
-            aud = AudioUtil.rechannel(aud)
-            aud = AudioUtil.resample(aud, self.sr)
-            aud = AudioUtil.random_portion(aud, self.duration)
-        except RuntimeError as err:
-            print(err)
-            n = random.randint(0, len(self))
-            return self[n]
+        # try:
+        aud = AudioUtil.open(self.index[idx], 5*self.duration)
+        aud = AudioUtil.rechannel(aud)
+        aud = AudioUtil.resample(aud, self.sr)
+        aud = AudioUtil.random_portion(aud, self.duration)
+        # except RuntimeError as err:
+        #     print(err)
+        #     n = random.randint(0, len(self))
+        #     return self[n]
         return aud[0]
 
 
 def get_fma_small(
-        path='./datasets/fma_small/fma_small', 
+        path='./datasets', 
         batch_size=64, 
         **kwargs):
-    path = Path(path)
+    path = Path(path) / 'fma_small'
     dataset = FMASmallDataset(
         path=path, 
         **kwargs

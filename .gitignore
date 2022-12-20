@@ -8,3 +8,6 @@ saved
 .pytet_cache
 Duct_2d.egg-info
 build
+fma_small
+.DS_store
+_tmp_

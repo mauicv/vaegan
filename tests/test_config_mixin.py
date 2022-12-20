@@ -1,6 +1,6 @@
 from duct.utils.config_mixin import ConfigMixin
 from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder, \
-    VQVarAutoEncoder
+    VQVarAutoEncoder2D
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 from torch.optim import Adam
@@ -31,7 +31,7 @@ def test_util_mixin_vq_vae(tmp_path):
     a = Experiment.from_file(path='./tests/test_configs/vq_vae.toml')
     print(a.vae)
     assert a.vae.encoder.nc == 3
-    assert isinstance(a.vae, VQVarAutoEncoder)
+    assert isinstance(a.vae, VQVarAutoEncoder2D)
     assert isinstance(a.vae_enc_opt, Adam)
     assert isinstance(a.vae_dec_opt, Adam)
     assert a.optimizers == ['vae_enc_opt', 'vae_dec_opt']

@@ -6,14 +6,14 @@ import requests
 import tqdm
 
 
-def download(target='celeba', path='datasets/'):
+def download(target='celeba', path='./datasets/'):
     _ = {
         'celeba': download_celeba,
         'fma_small': download_fma_small,
     }[target](path=path)
 
 
-def unzip(target='celeba', path='datasets/', target_path='./' ):
+def unzip(target='celeba', path='./datasets/', target_path=None):
     _ = {
         'celeba': unzip_celeba,
         'fma_small': unzip_fma_small,
@@ -51,7 +51,7 @@ def download_celeba(path='datasets/'):
         )
 
 
-def unzip_celeba(path='datasets', target='./'):
+def unzip_celeba(path='./datasets', target='./datasets'):
 
     path = Path(path) / 'celeba'
     target_path = Path(target)
@@ -93,6 +93,8 @@ def download_zip_file(url, fname):
 
 def unzip_fma_small(path='./datasets', target='./datasets/fma_small/'):
     path = Path(path) / 'fma_small'
+    if target is None:
+        target = path / 'fma_small'
     target_path = Path(target)
     target_path.mkdir(exist_ok=True)
     target_loc_imgs = path / 'fma_small.zip'
