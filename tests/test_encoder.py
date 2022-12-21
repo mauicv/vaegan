@@ -1,12 +1,12 @@
 
 import pytest
-from duct.model.encoder import Encoder, DownSampleInstanceConv2dBlock
+from duct.model.encoder import Encoder, DownSampleInstanceConvBlock
 import torch
 
 
 def test_ds_block():
     t = torch.randn((64, 3, 128, 128))
-    downsample_block = DownSampleInstanceConv2dBlock(3, 16)
+    downsample_block = DownSampleInstanceConvBlock(3, 16)
     dst = downsample_block(t)
     assert dst.shape == (64, 16, 64, 64)
 

@@ -1,6 +1,6 @@
 import torch.nn as nn
 from duct.model.decoder import Decoder, UpSampleBatchConvBlock
-from duct.model.encoder import Encoder, DownSampleBatchConv2dBlock
+from duct.model.encoder import Encoder, DownSampleBatchConvBlock
 from itertools import chain
 
 
@@ -12,19 +12,22 @@ class BaseAutoEncoder(nn.Module):
             depth=5, 
             img_shape=(64, 64),
             res_blocks=tuple(0 for _ in range(5)),
+            data_dim=2
         ):
         super(BaseAutoEncoder, self).__init__()
         self.encoder = Encoder(
             nc=nc, ndf=ndf, depth=depth, 
             img_shape=img_shape,
             res_blocks=res_blocks,
-            downsample_block_type=DownSampleBatchConv2dBlock,
+            downsample_block_type=DownSampleBatchConvBlock,
+            data_dim=data_dim
         )
         self.decoder = Decoder(
             nc=nc, ndf=ndf, depth=depth,
             img_shape=img_shape,
             res_blocks=res_blocks,
-            upsample_block_type=UpSampleBatchConvBlock
+            upsample_block_type=UpSampleBatchConvBlock,
+            data_dim=data_dim
         )
 
     def forward(self, x):

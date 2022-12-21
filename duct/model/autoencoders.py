@@ -3,7 +3,7 @@ from duct.model.latent_spaces import LinearLatentSpace, StochasticLinearLatentSp
 from duct.model.base_autoencoder import BaseAutoEncoder
 
 
-class AutoEncoder(BaseAutoEncoder):
+class AutoEncoder2D(BaseAutoEncoder):
     def __init__(
             self, 
             nc, 
@@ -13,10 +13,11 @@ class AutoEncoder(BaseAutoEncoder):
             res_blocks=tuple(0 for _ in range(5)),
             latent_dim=None,
         ):
-        super(AutoEncoder, self).__init__(
+        super(AutoEncoder2D, self).__init__(
             nc=nc, ndf=ndf, depth=depth, 
             img_shape=img_shape,
             res_blocks=res_blocks,
+            data_dim=2
         )
         self.latent_space = LinearLatentSpace(
             input_shape=self.encoder.output_shape, 
@@ -25,7 +26,7 @@ class AutoEncoder(BaseAutoEncoder):
         )
 
 
-class VarAutoEncoder(BaseAutoEncoder):
+class VarAutoEncoder2D(BaseAutoEncoder):
     def __init__(
             self, 
             nc, 
@@ -35,10 +36,11 @@ class VarAutoEncoder(BaseAutoEncoder):
             res_blocks=tuple(0 for _ in range(5)),
             latent_dim=None,
         ):
-        super(VarAutoEncoder, self).__init__(
+        super(VarAutoEncoder2D, self).__init__(
             nc=nc, ndf=ndf, depth=depth, 
             img_shape=img_shape,
-            res_blocks=res_blocks
+            res_blocks=res_blocks,
+            data_dim=2
         )
         self.latent_space = StochasticLinearLatentSpace(
             input_shape=self.encoder.output_shape, 
@@ -52,7 +54,7 @@ class VarAutoEncoder(BaseAutoEncoder):
         return self.decoder(out_z[0])
 
 
-class NLLVarAutoEncoder(BaseAutoEncoder):
+class NLLVarAutoEncoder2D(BaseAutoEncoder):
     def __init__(
             self, 
             nc, 
@@ -64,10 +66,11 @@ class NLLVarAutoEncoder(BaseAutoEncoder):
         ):
         assert latent_dim is None
 
-        super(NLLVarAutoEncoder, self).__init__(
+        super(NLLVarAutoEncoder2D, self).__init__(
             nc=nc, ndf=ndf, depth=depth, 
             img_shape=img_shape,
-            res_blocks=res_blocks
+            res_blocks=res_blocks,
+            data_dim=2
         )
         self.latent_space = StochasticLatentSpace(
             input_shape=self.encoder.output_shape, 
@@ -98,7 +101,8 @@ class VQVarAutoEncoder2D(BaseAutoEncoder):
         super(VQVarAutoEncoder2D, self).__init__(
             nc=nc, ndf=ndf, depth=depth, 
             img_shape=img_shape,
-            res_blocks=res_blocks
+            res_blocks=res_blocks,
+            data_dim=2
         )
 
         C, _, _ = self.encoder.output_shape
@@ -125,14 +129,15 @@ class VQVarAutoEncoder1D(BaseAutoEncoder):
             res_blocks=tuple(0 for _ in range(5)),
             num_embeddings=25,
             commitment_cost=1,
-            latent_dim=None
+            latent_dim=None,
         ):
         assert latent_dim is None
 
         super(VQVarAutoEncoder1D, self).__init__(
             nc=nc, ndf=ndf, depth=depth, 
             img_shape=img_shape,
-            res_blocks=res_blocks
+            res_blocks=res_blocks,
+            data_dim=1
         )
 
         C, _, _ = self.encoder.output_shape

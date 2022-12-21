@@ -1,5 +1,5 @@
 [ae]
-class='AutoEncoder'
+class='AutoEncoder2D'
 nc = 3
 ndf = 16
 img_shape = [ 128, 128,]

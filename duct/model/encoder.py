@@ -1,24 +1,25 @@
 import torch.nn as nn
 import numpy as np
 from duct.model.resnet import ResnetBlock
+from duct.model.torch_modules import get_conv, get_instance_norm, get_batch_norm
 
 
-class DownSampleInstanceConv2dBlock(nn.Module):
-    def __init__(self, in_filters, out_filters):
+class DownSampleInstanceConvBlock(nn.Module):
+    def __init__(self, in_filters, out_filters, data_dim=2):
         super().__init__()
-        self.conv = nn.Conv2d(in_filters, out_filters, 4, 2, 1)
-        self.norm = nn.InstanceNorm2d(out_filters)
+        self.conv = get_conv(data_dim)(in_filters, out_filters, 4, 2, 1)
+        self.norm = get_instance_norm(data_dim)(out_filters)
         self.leakyrelu = nn.LeakyReLU(0.2)
 
     def forward(self, x):
         return self.leakyrelu(self.norm(self.conv(x)))
 
 
-class DownSampleBatchConv2dBlock(nn.Module):
-    def __init__(self, in_filters, out_filters):
+class DownSampleBatchConvBlock(nn.Module):
+    def __init__(self, in_filters, out_filters, data_dim=2):
         super().__init__()
-        self.conv = nn.Conv2d(in_filters, out_filters, 4, 2, 1)
-        self.norm = nn.BatchNorm2d(out_filters)
+        self.conv = get_conv(data_dim)(in_filters, out_filters, 4, 2, 1)
+        self.norm = get_batch_norm(data_dim)(out_filters)
         self.leakyrelu = nn.LeakyReLU(0.2)
 
     def forward(self, x):
@@ -30,7 +31,8 @@ class Encoder(nn.Module):
             self, nc, ndf, depth=5,
             img_shape=(32, 32),
             res_blocks=tuple(0 for _ in range(5)),
-            downsample_block_type=DownSampleInstanceConv2dBlock
+            downsample_block_type=DownSampleInstanceConvBlock,
+            data_dim=2
         ):
         super(Encoder, self).__init__()
 
@@ -39,7 +41,7 @@ class Encoder(nn.Module):
         self.nc = nc
         self.ndf = ndf
         self.depth = depth
-        self.input_conv = nn.Conv2d(nc, ndf, 1, 1, 0)
+        self.input_conv = get_conv(data_dim)(nc, ndf, 1, 1, 0)
 
         layers = nn.ModuleList()
 
@@ -50,12 +52,16 @@ class Encoder(nn.Module):
             for _ in range(res_blocks[ind]):
                 layers.append(ResnetBlock(
                     in_channels=in_filters, 
-                    out_channels=ndf_cur
+                    out_channels=ndf_cur,
+                    data_dim=data_dim,
                 ))
                 in_filters = ndf_cur
             img_shape = (tuple(int(d/2) for d in img_shape))
             layers.append(
-                downsample_block_type(in_filters, ndf_cur))
+                downsample_block_type(
+                    in_filters, ndf_cur, 
+                    data_dim=data_dim
+                ))
 
         self.output_shape = (ndf_cur, *img_shape)
         self.layers = layers

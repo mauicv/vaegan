@@ -7,11 +7,7 @@ import torch
 import torch.nn as nn
 from torch.nn import Module
 from duct.model.activations import nonlinearity
-
-
-def Normalize(in_channels):
-    return nn.BatchNorm2d(in_channels)
-    # return torch.nn.GroupNorm(num_groups=32, num_channels=in_channels, eps=1e-6, affine=True)
+from duct.model.torch_modules import get_conv, get_batch_norm
 
 
 class ResnetBlock(Module):
@@ -21,7 +17,7 @@ class ResnetBlock(Module):
             out_channels=None, 
             conv_shortcut=False, 
             dropout=0,
-
+            data_dim=2
         ):
         super().__init__()
         self.in_channels = in_channels
@@ -29,32 +25,24 @@ class ResnetBlock(Module):
         self.out_channels = out_channels
         self.use_conv_shortcut = conv_shortcut
 
-        self.norm1 = Normalize(in_channels)
-        self.conv1 = torch.nn.Conv2d(in_channels,
-                                     out_channels,
-                                     kernel_size=3,
-                                     stride=1,
-                                     padding=1)
-        self.norm2 = Normalize(out_channels)
+        self.norm1 = get_batch_norm(data_dim)(in_channels)
+        self.conv1 = get_conv(data_dim)(
+            in_channels, out_channels, kernel_size=3,
+            stride=1, padding=1)
+        self.norm2 = get_batch_norm(data_dim)(out_channels)
         self.dropout = torch.nn.Dropout(dropout)
-        self.conv2 = torch.nn.Conv2d(out_channels,
-                                     out_channels,
-                                     kernel_size=3,
-                                     stride=1,
-                                     padding=1)
+        self.conv2 = get_conv(data_dim)(
+            out_channels, out_channels, kernel_size=3,
+            stride=1, padding=1)
         if self.in_channels != self.out_channels:
             if self.use_conv_shortcut:
-                self.conv_shortcut = torch.nn.Conv2d(in_channels,
-                                                     out_channels,
-                                                     kernel_size=3,
-                                                     stride=1,
-                                                     padding=1)
+                self.conv_shortcut = get_conv(data_dim)(
+                    in_channels, out_channels, kernel_size=3,
+                    stride=1, padding=1)
             else:
-                self.nin_shortcut = torch.nn.Conv2d(in_channels,
-                                                    out_channels,
-                                                    kernel_size=1,
-                                                    stride=1,
-                                                    padding=0)
+                self.nin_shortcut = get_conv(data_dim)(
+                    in_channels, out_channels, kernel_size=1,
+                    stride=1, padding=0)
 
     def forward(self, x):
         h = x

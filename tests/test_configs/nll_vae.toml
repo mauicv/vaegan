@@ -1,5 +1,5 @@
 [vae]
-class = 'NLLVarAutoEncoder'
+class = 'NLLVarAutoEncoder2D'
 nc = 3
 ndf = 16
 img_shape = [ 128, 128,]
