@@ -3,12 +3,12 @@
 TODO: find out where I got this from...
 """
 
-
+import torch
+import matplotlib.pyplot as plt
 import random
 import torch
 import torchaudio
 from torchaudio import transforms
-# from IPython.display import Audio
 
 # todo: randomize this for each __get_item__ call
 FRAME_OFFSET = 16000
@@ -49,38 +49,38 @@ class AudioUtil():
         return (sig[:, i:i+size], sr)
 
 
-# import torch
-# import matplotlib.pyplot as plt
-# from IPython.display import Audio, display
+def save_audio(
+            self,
+            waveform_real, 
+            waveform_fake, 
+            sample_rate,
+            title="Waveform",
+            xlim=None, 
+            ylim=None
+        ):
+    waveform_real = waveform_real.numpy()
+    waveform_fake = waveform_fake.numpy()
 
+    num_channels, num_frames = waveform_real.shape
 
-# def plot_waveform(waveform, sample_rate, title="Waveform", xlim=None, ylim=None):
-#     waveform = waveform.numpy()
+    time_axis = torch.arange(0, num_frames) / sample_rate
+    figure, axes = plt.subplots(nrows=num_channels, ncols=2)
 
-#     num_channels, num_frames = waveform.shape
-#     time_axis = torch.arange(0, num_frames) / sample_rate
+    for ind in [0, 1]:
+        label = {0: 'Real', 1: 'Fake'}[ind]
+        waveform = {0: waveform_real, 1: waveform_fake}[ind]
+        axes[1, ind].set_xlabel(label)
+        for c in range(num_channels):
+            axes[c, ind].plot(time_axis, waveform[c], linewidth=1)
+            axes[c, ind].grid(True)
 
-#     figure, axes = plt.subplots(num_channels, 1)
-#     if num_channels == 1:
-#         axes = [axes]
-#     for c in range(num_channels):
-#         axes[c].plot(time_axis, waveform[c], linewidth=1)
-#         axes[c].grid(True)
-#         if num_channels > 1:
-#             axes[c].set_ylabel(f'Channel {c+1}')
-#         if xlim:
-#             axes[c].set_xlim(xlim)
-#         if ylim:
-#             axes[c].set_ylim(ylim)
-#     figure.suptitle(title)
-#     plt.show(block=False)
+            if num_channels > 1:
+                axes[c, ind].set_ylabel(f'Channel {c+1}')
+            if xlim:
+                axes[c, ind].set_xlim(xlim)
+            if ylim:
+                axes[c, ind].set_ylim(ylim)
 
-# def play_audio(waveform, sample_rate):
-#     waveform = waveform.numpy()
-#     num_channels, num_frames = waveform.shape
-#     if num_channels == 1:
-#         display(Audio(waveform[0], rate=sample_rate))
-#     elif num_channels == 2:
-#         display(Audio((waveform[0], waveform[1]), rate=sample_rate))
-#     else:
-#         raise ValueError("Waveform with more than 2 channels are not supported.")
+    figure.suptitle(title)
+    fname = self.training_artifcat_path / f'{self.iter_count}.png'
+    plt.savefig(fname)

@@ -23,5 +23,5 @@ def save_img_pairs(self, imgs_1, imgs_2):
             b.set_xticklabels([])
             b.set_yticklabels([])
             b.set_aspect('equal')
-    fname = self.imgs_path / f'{self.img_count}.png'
+    fname = self.training_artifcat_path / f'{self.iter_count}.png'
     plt.savefig(fname)

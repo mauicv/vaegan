@@ -7,7 +7,7 @@ import shutil
 
 def test_saving_1(tmp_path):
     class Experiment(ConfigMixin, LoggingMixin):
-        img_save_hook = save_img_pairs
+        save_hook = save_img_pairs
         headers = ['vae_enc_loss', 'vae_dec_loss', 'critic_loss', 'patch_critic_loss']
         name = str(tmp_path)
 
@@ -22,7 +22,7 @@ def test_saving_1(tmp_path):
     assert imgs_1.shape == imgs_2.shape
 
     test_class.save_state(tmp_path / 'model.pt')
-    test_class.save_imgs(imgs_1, imgs_2)
+    test_class.save_training_artifacts(imgs_1, imgs_2)
 
 
 def test_saving_2(tmp_path):
@@ -30,7 +30,7 @@ def test_saving_2(tmp_path):
     shutil.copyfile('./tests/test_configs/config_2d.toml', str(tmp_path / 'test' / 'config.toml'))
 
     class Experiment(ConfigMixin, LoggingMixin):
-        img_save_hook = save_img_pairs
+        save_hook = save_img_pairs
         headers = ['vae_enc_loss', 'vae_dec_loss', 'critic_loss', 'patch_critic_loss']
         name = 'test'
         path = str(tmp_path)
@@ -46,15 +46,16 @@ def test_saving_2(tmp_path):
     assert imgs_1.shape == imgs_2.shape
 
     test_class.save_state(tmp_path / 'model.pt')
-    test_class.save_imgs(imgs_1, imgs_2)
+    test_class.save_training_artifacts(imgs_1, imgs_2)
 
 
 def test_saving_1d_vqvae(tmp_path):
+    # tmp_path = './test_path'
     (tmp_path / 'test').mkdir()
     shutil.copyfile('./tests/test_configs/config_1d.toml', str(tmp_path / 'test' / 'config.toml'))
 
     class Experiment(ConfigMixin, LoggingMixin):
-        # img_save_hook = save_img_pairs
+        # save_hook = ...
         headers = ['vae_enc_loss', 'vae_dec_loss', 'critic_loss',]
         name = 'test'
         path = str(tmp_path)
@@ -70,4 +71,4 @@ def test_saving_1d_vqvae(tmp_path):
     assert aud_1.shape == aud_2.shape
 
     test_class.save_state(tmp_path / 'model.pt')
-    # test_class.save_imgs(aud_1, aud_2)
+    # test_class.save_training_artifacts(aud_1, aud_2)

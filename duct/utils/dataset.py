@@ -8,6 +8,7 @@ import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import os
+import random
 
 
 def get_dataset(target='celeba', path='./datasets/celeba', batch_size=64, **kwargs):
@@ -92,15 +93,15 @@ class FMASmallDataset(Dataset):
         return len(self.index)
 
     def __getitem__(self, idx):
-        # try:
-        aud = AudioUtil.open(self.index[idx], 5*self.duration)
-        aud = AudioUtil.rechannel(aud)
-        aud = AudioUtil.resample(aud, self.sr)
-        aud = AudioUtil.random_portion(aud, self.duration)
-        # except RuntimeError as err:
-        #     print(err)
-        #     n = random.randint(0, len(self))
-        #     return self[n]
+        try:
+            aud = AudioUtil.open(self.index[idx], 5*self.duration)
+            aud = AudioUtil.rechannel(aud)
+            aud = AudioUtil.resample(aud, self.sr)
+            aud = AudioUtil.random_portion(aud, self.duration)
+        except RuntimeError as err:
+            print(err)
+            n = random.randint(0, len(self))
+            return self[n]
         return aud[0]
 
 

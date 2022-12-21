@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 
 class LoggingMixin(ExperimentBase):
     headers = []
-    img_save_hook = None
+    save_hook = None
 
     def __init__(self):
         super().__init__()
-        self.img_count = 0
+        self.iter_count = 0
         self.row_count = 0
 
     def setup_logs(self):
@@ -23,7 +23,7 @@ class LoggingMixin(ExperimentBase):
                 self.row_count = 0
         else:
             self.row_count = sum(1 for _ in self.load_logs())
-        self.imgs_path.mkdir(parents=True, exist_ok=True)
+        self.training_artifcat_path.mkdir(parents=True, exist_ok=True)
 
     def log(self, dict):
         with self.csv_filepath.open('a') as f:
@@ -39,10 +39,10 @@ class LoggingMixin(ExperimentBase):
                 self.row_count += 1
                 yield row
 
-    def save_imgs(self, *args, **kwargs):
-        self.img_count += 1
-        if self.img_save_hook is not None:
-            self.img_save_hook(*args, **kwargs)
+    def save_training_artifacts(self, *args, **kwargs):
+        self.iter_count += 1
+        if self.save_hook is not None:
+            self.save_hook(*args, **kwargs)
 
     @property
     def log_dir(self):
@@ -53,5 +53,5 @@ class LoggingMixin(ExperimentBase):
         return self.log_dir / Path('experiment.csv')
 
     @property
-    def imgs_path(self):
-        return self.log_dir / Path('imgs')
+    def training_artifcat_path(self):
+        return self.log_dir / Path('training_artifacts')
