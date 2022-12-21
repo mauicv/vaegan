@@ -8,7 +8,11 @@ setup(
     author='Alexander Athorne',
     author_email='alexander.athorne@gmail.com',
     url='https://github.com/mauicv/vaegan/',
-    packages=['duct.model', 'duct.utils'],
+    packages=[
+        'duct.model',
+        'duct.utils',
+        'duct.model.latent_spaces'
+    ],
     install_requires=[
         "torch>=1.7.0, <1.14.0",
         "toml>=0.10.1, <1.0.0"
