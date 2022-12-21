@@ -1,5 +1,6 @@
-from duct.model.latent_spaces import LinearLatentSpace, StochasticLinearLatentSpace, \
-    StochasticLatentSpace, VQLatentSpace2D, VQLatentSpace1D
+from duct.model.latent_spaces.continuous import LinearLatentSpace, StochasticLinearLatentSpace, \
+    StochasticLatentSpace
+from duct.model.latent_spaces.discrete import VQLatentSpace2D, VQLatentSpace1D
 from duct.model.base_autoencoder import BaseAutoEncoder
 
 

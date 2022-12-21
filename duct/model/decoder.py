@@ -1,5 +1,4 @@
 import torch.nn as nn
-import numpy as np
 from duct.model.resnet import ResnetBlock
 from duct.model.torch_modules import get_conv, get_batch_norm, get_rep_pad, get_upsample
 
