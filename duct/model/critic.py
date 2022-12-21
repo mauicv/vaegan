@@ -7,13 +7,14 @@ class Critic(nn.Module):
           self, 
           nc, 
           ndf,  
+          data_shape,
           depth=5, 
-          img_shape=(128, 128),
           res_blocks=tuple(0 for _ in range(5)),):
         super(Critic, self).__init__()
+        assert len(data_shape) in {1, 2}, "data_dim must be 1 or 2"
         self.encoder = Encoder(
             nc=nc, ndf=ndf, depth=depth,
-            img_shape=img_shape,
+            data_shape=data_shape,
             res_blocks=res_blocks)
         self.fc = nn.Linear(np.prod(self.encoder.output_shape), 1)
 

@@ -44,7 +44,7 @@ class CelebADataset(Dataset):
         return image
 
 
-def get_celeba(path='./datasets/celeba', img_shape=(128, 128), batch_size=64):
+def get_celeba(path='./datasets/celeba', data_shape=(128, 128), batch_size=64):
     path = Path(path) 
     if not (path / 'img_align_celeba').is_dir():
         raise ValueError('Dataset not downloaded or unzipped')
@@ -56,7 +56,7 @@ def get_celeba(path='./datasets/celeba', img_shape=(128, 128), batch_size=64):
         transform=transforms.Compose([
             transforms.CenterCrop([128, 128]),
             transforms.ConvertImageDtype(torch.float32),
-            transforms.Resize(img_shape)
+            transforms.Resize(data_shape)
         ])
     )
 

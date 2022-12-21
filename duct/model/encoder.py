@@ -28,20 +28,19 @@ class DownSampleBatchConvBlock(nn.Module):
 
 class Encoder(nn.Module):
     def __init__(
-            self, nc, ndf, depth=5,
-            img_shape=(32, 32),
+            self, nc, ndf, data_shape,
+            depth=5,
             res_blocks=tuple(0 for _ in range(5)),
             downsample_block_type=DownSampleInstanceConvBlock,
-            data_dim=2
         ):
         super(Encoder, self).__init__()
 
         assert len(res_blocks) == depth, 'len(res_blocks) != depth'
-
+        self.data_dim = len(data_shape)
         self.nc = nc
         self.ndf = ndf
         self.depth = depth
-        self.input_conv = get_conv(data_dim)(nc, ndf, 1, 1, 0)
+        self.input_conv = get_conv(self.data_dim)(nc, ndf, 1, 1, 0)
 
         layers = nn.ModuleList()
 
@@ -53,17 +52,17 @@ class Encoder(nn.Module):
                 layers.append(ResnetBlock(
                     in_channels=in_filters, 
                     out_channels=ndf_cur,
-                    data_dim=data_dim,
+                    data_dim=self.data_dim,
                 ))
                 in_filters = ndf_cur
-            img_shape = (tuple(int(d/2) for d in img_shape))
+            data_shape = (tuple(int(d/2) for d in data_shape))
             layers.append(
                 downsample_block_type(
                     in_filters, ndf_cur, 
-                    data_dim=data_dim
+                    data_dim=self.data_dim
                 ))
 
-        self.output_shape = (ndf_cur, *img_shape)
+        self.output_shape = (ndf_cur, *data_shape)
         self.layers = layers
 
     def forward(self, x):

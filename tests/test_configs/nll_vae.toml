@@ -1,8 +1,8 @@
 [vae]
-class = 'NLLVarAutoEncoder2D'
+class = 'NLLVarAutoEncoder'
 nc = 3
 ndf = 16
-img_shape = [ 128, 128,]
+data_shape = [ 128, 128,]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
 

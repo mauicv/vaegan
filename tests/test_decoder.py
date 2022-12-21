@@ -12,7 +12,7 @@ def test_us_block():
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 1)])
 def test_decoder(res_blocks):
-    decoder = Decoder(3, 16, depth=3, img_shape=(32, 32), res_blocks=res_blocks)
+    decoder = Decoder(3, 16, depth=3, data_shape=(32, 32), res_blocks=res_blocks)
     t = torch.randn((64, 128, 8, 8))
     x = decoder(t)
     assert x.shape == (64, 3, 64, 64)

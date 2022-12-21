@@ -6,8 +6,7 @@ class Experiment(ConfigMixin):
 
 
 def test_saving(tmp_path):
-
-    test_class = Experiment.from_file(path='./tests/test_configs/config.toml')
+    test_class = Experiment.from_file(path='./tests/test_configs/config_2d.toml')
     assert test_class.models == ['vae', 'critic', 'patch_critic']
     assert test_class.optimizers == ['vae_enc_opt', 'vae_dec_opt', 'critic_opt', 'patch_critic_opt']
 
@@ -35,7 +34,7 @@ def test_saving(tmp_path):
     test_class = None
     models = None
 
-    test_class2 = Experiment.from_file(path='./tests/test_configs/config.toml')
+    test_class2 = Experiment.from_file(path='./tests/test_configs/config_2d.toml')
     assert test_class2.models == ['vae', 'critic', 'patch_critic']
     assert test_class2.optimizers == ['vae_enc_opt', 'vae_dec_opt', 'critic_opt', 'patch_critic_opt']
 

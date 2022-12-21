@@ -14,7 +14,7 @@ def test_ds_block():
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
 def test_encoder(res_blocks):
     encoder = Encoder(3, 16, depth=3,
-                      img_shape=(32, 32),
+                      data_shape=(32, 32),
                       res_blocks=res_blocks)
     t = torch.randn((64, 3, 32, 32))
     x = encoder(t)

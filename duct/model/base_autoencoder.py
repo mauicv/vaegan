@@ -9,25 +9,23 @@ class BaseAutoEncoder(nn.Module):
             self, 
             nc, 
             ndf, 
+            data_shape,
             depth=5, 
-            img_shape=(64, 64),
             res_blocks=tuple(0 for _ in range(5)),
-            data_dim=2
         ):
         super(BaseAutoEncoder, self).__init__()
+        assert len(data_shape) in {1, 2}, "data_dim must be 1 or 2"
         self.encoder = Encoder(
             nc=nc, ndf=ndf, depth=depth, 
-            img_shape=img_shape,
+            data_shape=data_shape,
             res_blocks=res_blocks,
             downsample_block_type=DownSampleBatchConvBlock,
-            data_dim=data_dim
         )
         self.decoder = Decoder(
             nc=nc, ndf=ndf, depth=depth,
-            img_shape=img_shape,
+            data_shape=data_shape,
             res_blocks=res_blocks,
             upsample_block_type=UpSampleBatchConvBlock,
-            data_dim=data_dim
         )
 
     def forward(self, x):

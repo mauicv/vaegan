@@ -1,16 +1,16 @@
 import pytest
-from duct.model.autoencoders import AutoEncoder2D, VarAutoEncoder2D, NLLVarAutoEncoder2D, \
-    VQVarAutoEncoder2D, VQVarAutoEncoder1D
+from duct.model.autoencoders import AutoEncoder, VarAutoEncoder, NLLVarAutoEncoder, \
+    VQVarAutoEncoder
 import torch
 
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
 def test_auto_encoder(res_blocks):
-    autoencoder = AutoEncoder2D(
+    autoencoder = AutoEncoder(
         3, 16,
         latent_dim=516,
         depth=3,
-        img_shape=(32, 32),
+        data_shape=(32, 32),
         res_blocks=res_blocks,
     )
 
@@ -22,11 +22,11 @@ def test_auto_encoder(res_blocks):
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
 def test_var_auto_encoder(res_blocks):
-    autoencoder = VarAutoEncoder2D(
+    autoencoder = VarAutoEncoder(
         3, 16,
         latent_dim=516,
         depth=3,
-        img_shape=(32, 32),
+        data_shape=(32, 32),
         res_blocks=res_blocks,
     )
 
@@ -41,11 +41,11 @@ def test_var_auto_encoder(res_blocks):
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
 def test_nll_var_auto_encoder(res_blocks):
-    autoencoder = NLLVarAutoEncoder2D(
+    autoencoder = NLLVarAutoEncoder(
         3, 16,
         latent_dim=None,
         depth=3,
-        img_shape=(32, 32),
+        data_shape=(32, 32),
         res_blocks=res_blocks,
     )
 
@@ -60,11 +60,11 @@ def test_nll_var_auto_encoder(res_blocks):
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
 def test_vq_var_auto_encoder_2d(res_blocks):
-    autoencoder = VQVarAutoEncoder2D(
+    autoencoder = VQVarAutoEncoder(
         3, 16,
         latent_dim=None,
         depth=3,
-        img_shape=(32, 32),
+        data_shape=(32, 32),
         res_blocks=res_blocks,
         commitment_cost=1,
         num_embeddings=100
@@ -78,14 +78,13 @@ def test_vq_var_auto_encoder_2d(res_blocks):
     assert autoencoder.call(t).shape == t_shape
 
 
-# @pytest.mark.xfail(reason="Not implemented")
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
 def test_vq_var_auto_encoder_1d(res_blocks):
-    autoencoder = VQVarAutoEncoder1D(
+    autoencoder = VQVarAutoEncoder(
         2, 16,
         latent_dim=None,
         depth=3,
-        img_shape=(32, ),
+        data_shape=(32, ),
         res_blocks=res_blocks,
         commitment_cost=1,
         num_embeddings=100
