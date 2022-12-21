@@ -72,7 +72,7 @@ def test_vq_var_auto_encoder_2d(res_blocks):
 
     t_shape = (64, 3, 32, 32)
     t = torch.zeros(t_shape)
-    y, loss, perplexity, encoded = autoencoder(t)
+    y, _, _, encoded = autoencoder(t)
     assert y.shape == t_shape
     assert encoded.shape == (64, 4, 4, 100)
     assert autoencoder.call(t).shape == t_shape
@@ -85,7 +85,7 @@ def test_vq_var_auto_encoder_1d(res_blocks):
         2, 16,
         latent_dim=None,
         depth=3,
-        img_shape=(32, 32),
+        img_shape=(32, ),
         res_blocks=res_blocks,
         commitment_cost=1,
         num_embeddings=100
@@ -93,9 +93,7 @@ def test_vq_var_auto_encoder_1d(res_blocks):
 
     t_shape = (64, 2, 32)
     t = torch.zeros(t_shape)
-    y, loss, perplexity, encoded = autoencoder(t)
-    print(encoded.shape)
-    print(y.shape)
+    y, _, _, encoded = autoencoder(t)
     assert y.shape == t_shape
-    # assert encoded.shape == (64, 4, 4, 100)
-    # assert autoencoder.call(t).shape == t_shape
+    assert encoded.shape == (64, 4, 100)
+    assert autoencoder.call(t).shape == t_shape

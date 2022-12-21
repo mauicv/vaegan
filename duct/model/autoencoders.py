@@ -105,7 +105,7 @@ class VQVarAutoEncoder2D(BaseAutoEncoder):
             data_dim=2
         )
 
-        C, _, _ = self.encoder.output_shape
+        C, *_ = self.encoder.output_shape
 
         self.latent_space = VQLatentSpace2D(
             num_embeddings=num_embeddings, 
@@ -125,7 +125,7 @@ class VQVarAutoEncoder1D(BaseAutoEncoder):
             nc, 
             ndf, 
             depth=5, 
-            img_shape=(64, 64),
+            img_shape=(64, ),
             res_blocks=tuple(0 for _ in range(5)),
             num_embeddings=25,
             commitment_cost=1,
@@ -140,7 +140,7 @@ class VQVarAutoEncoder1D(BaseAutoEncoder):
             data_dim=1
         )
 
-        C, _, _ = self.encoder.output_shape
+        C, *_ = self.encoder.output_shape
 
         self.latent_space = VQLatentSpace1D(
             num_embeddings=num_embeddings, 
