@@ -87,7 +87,8 @@ def test_vq_var_auto_encoder_1d(res_blocks):
         data_shape=(32, ),
         res_blocks=res_blocks,
         commitment_cost=1,
-        num_embeddings=100
+        num_embeddings=100,
+        output_activation='Sigmoid'
     )
 
     t_shape = (64, 2, 32)
@@ -95,4 +96,23 @@ def test_vq_var_auto_encoder_1d(res_blocks):
     y, _, _, encoded = autoencoder(t)
     assert y.shape == t_shape
     assert encoded.shape == (64, 4, 100)
+    assert autoencoder.call(t).shape == t_shape
+
+
+def test_vq_var_auto_encoder_1d_aud():
+    autoencoder = VQVarAutoEncoder(
+        2, 16, depth=5,
+        data_shape=(8192, ),
+        res_blocks=(0, 0, 0, 0, 0),
+        commitment_cost=1,
+        num_embeddings=100,
+        output_activation='Tanh'
+    )
+
+    t_shape = (64, 2, 8192)
+    t = torch.zeros(t_shape)
+    y, _, _, encoded = autoencoder(t)
+    assert -1 <= y.min() < y.max() <= 1
+    assert y.shape == t_shape
+    assert encoded.shape == (64, 256, 100)
     assert autoencoder.call(t).shape == t_shape

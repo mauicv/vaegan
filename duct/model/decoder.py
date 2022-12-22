@@ -51,9 +51,8 @@ class Decoder(nn.Module):
 
         self.layers = layers[::-1]
         self.input_shape = (ndf_cur, *data_shape)
-        self.sig = nn.Sigmoid()
 
     def forward(self, z):
         for layer in self.layers:
             z = layer(z)
-        return self.sig(self.out_conv(z))
+        return self.out_conv(z)

@@ -53,3 +53,14 @@ def test_loss_1D(res_blocks):
     assert loss.shape == (1, )
     loss = critic.loss(t1, t1)
     assert loss == 0
+
+
+@pytest.mark.parametrize("res_blocks", [(0, 0, 0, 0, 0, 0)])
+def test_critic_1D_aud(res_blocks):
+    critic = Critic(
+        2, 16, depth=6, 
+        data_shape=(8192, ),
+        res_blocks=res_blocks
+    )
+    t = torch.randn((64, 2, 8192))
+    assert critic(t).shape == (64, 1)

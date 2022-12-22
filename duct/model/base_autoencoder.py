@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 from duct.model.decoder import Decoder, UpSampleBatchConvBlock
 from duct.model.encoder import Encoder, DownSampleBatchConvBlock
 from itertools import chain
@@ -12,6 +13,7 @@ class BaseAutoEncoder(nn.Module):
             data_shape,
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
+            output_activation='Sigmoid',
         ):
         super(BaseAutoEncoder, self).__init__()
         assert len(data_shape) in {1, 2}, "data_dim must be 1 or 2"
@@ -27,11 +29,16 @@ class BaseAutoEncoder(nn.Module):
             res_blocks=res_blocks,
             upsample_block_type=UpSampleBatchConvBlock,
         )
+        self.output_activation = getattr(torch.nn, output_activation)() \
+            if output_activation else None
 
     def forward(self, x):
         x = self.encoder(x)
         out_z = self.latent_space(x)
-        return (self.decoder(out_z[0]), *out_z[1:])
+        y = self.decoder(out_z[0])
+        if self.output_activation is not None:
+            y = self.output_activation(y)
+        return (y, *out_z[1:])
 
     def encode(self, x):
         return self.latent_space(self.encoder(x))

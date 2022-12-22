@@ -92,7 +92,8 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             res_blocks=tuple(0 for _ in range(5)),
             num_embeddings=25,
             commitment_cost=1,
-            latent_dim=None
+            output_activation='Sigmoid',
+            latent_dim=None,
         ):
         assert latent_dim is None
         data_dim=len(data_shape)
@@ -101,6 +102,7 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
+            output_activation=output_activation
         )
 
         C, *_ = self.encoder.output_shape
