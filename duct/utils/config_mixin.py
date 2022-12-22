@@ -1,5 +1,5 @@
 import toml
-from duct.model import ModelRegistry
+from duct.model.model_registry import ModelRegistry
 import torch
 from duct.utils.experiment_base import ExperimentBase
 from pathlib import Path

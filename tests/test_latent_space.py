@@ -1,6 +1,7 @@
 import torch
-from duct.model.latent_spaces import LinearLatentSpace, StochasticLinearLatentSpace, \
-    StochasticLatentSpace, VQLatentSpace1D, VQLatentSpace2D
+from duct.model.latent_spaces.continuous import LinearLatentSpace, StochasticLinearLatentSpace, \
+    StochasticLatentSpace
+from duct.model.latent_spaces.discrete import VQLatentSpace1D, VQLatentSpace2D
 
 
 def test_linear_latent_space():
