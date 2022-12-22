@@ -119,4 +119,8 @@ class VQVarAutoEncoder(BaseAutoEncoder):
     def call(self, x):
         x = self.encoder(x)
         out_z = self.latent_space(x)
-        return self.decoder(out_z[0])
+        y = self.decoder(out_z[0])
+        if self.output_activation is not None:
+            y = self.output_activation(y)
+        return y
+
