@@ -78,24 +78,26 @@ def test_vq_var_auto_encoder_2d(res_blocks):
     assert autoencoder.call(t).shape == t_shape
 
 
-@pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 1, 1), (1, 2, 0)])
+@pytest.mark.parametrize("res_blocks", [(0, 0, 0, 0), (1, 1, 1, 1), (1, 2, 0, 0)])
 def test_vq_var_auto_encoder_1d(res_blocks):
     autoencoder = VQVarAutoEncoder(
         2, 16,
         latent_dim=None,
-        depth=3,
-        data_shape=(32, ),
+        depth=4,
+        data_shape=(8192, ),
         res_blocks=res_blocks,
         commitment_cost=1,
         num_embeddings=100,
-        output_activation='Sigmoid'
+        output_activation='Sigmoid',
+        upsample_block_type='audio_block',
+        downsample_block_type='audio_block'
     )
 
-    t_shape = (64, 2, 32)
+    t_shape = (64, 2, 8192)
     t = torch.zeros(t_shape)
     y, _, _, encoded = autoencoder(t)
     assert y.shape == t_shape
-    assert encoded.shape == (64, 4, 100)
+    assert encoded.shape == (64, 32, 100)
     assert autoencoder.call(t).shape == t_shape
 
 
@@ -106,7 +108,9 @@ def test_vq_var_auto_encoder_1d_aud():
         res_blocks=(0, 0, 0, 0, 0),
         commitment_cost=1,
         num_embeddings=100,
-        output_activation='Tanh'
+        output_activation='Tanh',
+        upsample_block_type='audio_block',
+        downsample_block_type='audio_block'
     )
 
     t_shape = (64, 2, 8192)
@@ -114,5 +118,5 @@ def test_vq_var_auto_encoder_1d_aud():
     y, _, _, encoded = autoencoder(t)
     assert -1 <= y.min() < y.max() <= 1
     assert y.shape == t_shape
-    assert encoded.shape == (64, 256, 100)
+    assert encoded.shape == (64, 8, 100)
     assert autoencoder.call(t).shape == t_shape

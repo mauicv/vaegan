@@ -5,10 +5,12 @@ save_rate = 250
 class = 'VQVarAutoEncoder'
 nc = 2
 ndf = 16
-data_shape = [ 128, ]
+data_shape = [ 8192, ]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
 output_activation = 'Tanh'
+upsample_block_type = 'audio_block'
+downsample_block_type = 'audio_block'
 
 [[vae.opt_cfgs]]
 class='Adam'

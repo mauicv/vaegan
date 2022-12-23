@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
-from duct.model.decoder import Decoder, UpSampleBatchConvBlock
-from duct.model.encoder import Encoder, DownSampleBatchConvBlock
+from duct.model.decoder import Decoder, UpSampleBlock
+from duct.model.encoder import Encoder, DownSampleBlock
 from itertools import chain
 
 
@@ -14,6 +14,8 @@ class BaseAutoEncoder(nn.Module):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             output_activation='Sigmoid',
+            downsample_block_type='image_block',
+            upsample_block_type='image_block'
         ):
         super(BaseAutoEncoder, self).__init__()
         assert len(data_shape) in {1, 2}, "data_dim must be 1 or 2"
@@ -21,13 +23,13 @@ class BaseAutoEncoder(nn.Module):
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
-            downsample_block_type=DownSampleBatchConvBlock,
+            downsample_block_type=downsample_block_type,
         )
         self.decoder = Decoder(
             nc=nc, ndf=ndf, depth=depth,
             data_shape=data_shape,
             res_blocks=res_blocks,
-            upsample_block_type=UpSampleBatchConvBlock,
+            upsample_block_type=upsample_block_type,
         )
         self.output_activation = getattr(torch.nn, output_activation)() \
             if output_activation else None

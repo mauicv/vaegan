@@ -1,18 +1,33 @@
 import torch.nn as nn
 from duct.model.resnet import ResnetBlock
-from duct.model.torch_modules import get_conv, get_batch_norm, get_rep_pad, get_upsample
+from duct.model.torch_modules import get_conv, get_norm, get_rep_pad, get_upsample
 
-class UpSampleBatchConvBlock(nn.Module):
-    def __init__(self, in_filters, out_filters, data_dim=2):
+class UpSampleBlock(nn.Module):
+    def __init__(self, in_filters, out_filters, data_dim, norm_type, scale_factor, kernel, padding):
         super().__init__()
-        self.conv = get_conv(data_dim)(in_filters, out_filters, 3, 1)
-        self.up = get_upsample(data_dim)(scale_factor=2)
-        self.rp2d = get_rep_pad(data_dim)(1)
-        self.bn = get_batch_norm(data_dim=data_dim)(out_filters, 1.e-3)
+        self.conv = get_conv(data_dim)(in_filters, out_filters, kernel, padding=0)
+        self.up = get_upsample(data_dim)(scale_factor=scale_factor)
+        self.rp2d = get_rep_pad(data_dim)(padding)
+        self.norm = get_norm(type=norm_type, data_dim=data_dim)(out_filters, 1.e-3)
         self.leakyrelu = nn.LeakyReLU(0.2)
 
     def forward(self, x):
-        return self.leakyrelu(self.bn(self.conv(self.rp2d(self.up(x)))))
+        x = self.up(x)
+        x = self.rp2d(x)
+        x = self.conv(x)
+        x = self.norm(x)
+        x = self.leakyrelu(x)
+        return x
+
+    @classmethod
+    def audio_block(cls, in_filters, out_filters):
+        return cls(in_filters, out_filters, norm_type=None, data_dim=1, 
+                   scale_factor=4, kernel=25, padding=12)
+
+    @classmethod
+    def image_block(cls, in_filters, out_filters, norm_type='batch'):
+        return cls(in_filters, out_filters, norm_type=norm_type, data_dim=2, 
+                   scale_factor=2, kernel=3, padding=1)
 
 
 class Decoder(nn.Module):
@@ -22,7 +37,7 @@ class Decoder(nn.Module):
             ndf,
             data_shape,
             depth=5,
-            upsample_block_type=UpSampleBatchConvBlock,
+            upsample_block_type='image_block',
             res_blocks=tuple(0 for _ in range(5)),
         ):
         super(Decoder, self).__init__()
@@ -46,8 +61,7 @@ class Decoder(nn.Module):
                 layers.append(ResnetBlock(ndf_cur, out_filters, 
                     data_dim=self.data_dim))
                 out_filters = ndf_cur
-            layers.append(upsample_block_type(ndf_cur, out_filters, 
-                data_dim=self.data_dim))
+            layers.append(getattr(UpSampleBlock, upsample_block_type)(ndf_cur, out_filters))
 
         self.layers = layers[::-1]
         self.input_shape = (ndf_cur, *data_shape)

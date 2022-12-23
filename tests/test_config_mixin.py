@@ -129,6 +129,8 @@ def test_1d_vq_config(tmp_path):
     data_shape = [ 128, ]
     depth = 6
     res_blocks = [0, 0, 0, 0, 0, 0]
+    upsample_block_type = 'audio_block'
+    downsample_block_type = 'audio_block'
 
     [[vae.opt_cfgs]]
     class='Adam'

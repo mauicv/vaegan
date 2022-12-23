@@ -6,7 +6,7 @@ See https://github.com/CompVis/taming-transformers
 import torch
 from torch.nn import Module
 from duct.model.activations import nonlinearity
-from duct.model.torch_modules import get_conv, get_batch_norm
+from duct.model.torch_modules import get_conv, get_norm
 
 
 class ResnetBlock(Module):
@@ -16,7 +16,8 @@ class ResnetBlock(Module):
             out_channels=None, 
             conv_shortcut=False, 
             dropout=0,
-            data_dim=2
+            data_dim=2,
+            norm_type='batch'
         ):
         super().__init__()
         self.in_channels = in_channels
@@ -24,11 +25,11 @@ class ResnetBlock(Module):
         self.out_channels = out_channels
         self.use_conv_shortcut = conv_shortcut
 
-        self.norm1 = get_batch_norm(data_dim)(in_channels)
+        self.norm1 = get_norm(data_dim=data_dim, type=norm_type)(in_channels)
         self.conv1 = get_conv(data_dim)(
             in_channels, out_channels, kernel_size=3,
             stride=1, padding=1)
-        self.norm2 = get_batch_norm(data_dim)(out_channels)
+        self.norm2 = get_norm(data_dim=data_dim, type=norm_type)(out_channels)
         self.dropout = torch.nn.Dropout(dropout)
         self.conv2 = get_conv(data_dim)(
             out_channels, out_channels, kernel_size=3,

@@ -13,11 +13,15 @@ class AutoEncoder(BaseAutoEncoder):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             latent_dim=None,
+            downsample_block_type='image_block',
+            upsample_block_type='image_block'
         ):
         super(AutoEncoder, self).__init__(
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
+            downsample_block_type=downsample_block_type,
+            upsample_block_type=upsample_block_type
         )
         self.latent_space = LinearLatentSpace(
             input_shape=self.encoder.output_shape, 
@@ -35,11 +39,15 @@ class VarAutoEncoder(BaseAutoEncoder):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             latent_dim=None,
+            downsample_block_type='image_block',
+            upsample_block_type='image_block'
         ):
         super(VarAutoEncoder, self).__init__(
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
+            downsample_block_type=downsample_block_type,
+            upsample_block_type=upsample_block_type
         )
         self.latent_space = StochasticLinearLatentSpace(
             input_shape=self.encoder.output_shape, 
@@ -62,6 +70,8 @@ class NLLVarAutoEncoder(BaseAutoEncoder):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             latent_dim=None,
+            downsample_block_type='image_block',
+            upsample_block_type='image_block'
         ):
         assert latent_dim is None
 
@@ -69,11 +79,13 @@ class NLLVarAutoEncoder(BaseAutoEncoder):
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
+            downsample_block_type=downsample_block_type,
+            upsample_block_type=upsample_block_type
         )
         self.latent_space = StochasticLatentSpace(
             input_shape=self.encoder.output_shape, 
             output_shape=self.decoder.input_shape, 
-            latent_dim=latent_dim
+            latent_dim=latent_dim,
         )
 
     def call(self, x):
@@ -94,6 +106,8 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             commitment_cost=1,
             output_activation='Sigmoid',
             latent_dim=None,
+            downsample_block_type='image_block',
+            upsample_block_type='image_block'
         ):
         assert latent_dim is None
         data_dim=len(data_shape)
@@ -102,7 +116,9 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
-            output_activation=output_activation
+            output_activation=output_activation,
+            downsample_block_type=downsample_block_type,
+            upsample_block_type=upsample_block_type
         )
 
         C, *_ = self.encoder.output_shape

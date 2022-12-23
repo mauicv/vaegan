@@ -66,7 +66,7 @@ def test_saving_1d_vqvae(tmp_path):
     assert test_class.models == ['vae', 'critic']
     assert test_class.optimizers == ['vae_enc_opt', 'vae_dec_opt', 'critic_opt']
 
-    aud_1 = torch.randn(6, 2, 128)
+    aud_1 = torch.randn(6, 2, 8192)
     aud_2 = test_class.vae.call(aud_1)
     assert aud_1.shape == aud_2.shape
 

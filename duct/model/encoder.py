@@ -1,28 +1,40 @@
 import torch.nn as nn
 from duct.model.resnet import ResnetBlock
-from duct.model.torch_modules import get_conv, get_instance_norm, get_batch_norm
+from duct.model.torch_modules import get_conv, get_norm
 
 
-class DownSampleInstanceConvBlock(nn.Module):
-    def __init__(self, in_filters, out_filters, data_dim=2):
+class DownSampleBlock(nn.Module):
+    def __init__(
+            self, 
+            in_filters, 
+            out_filters, 
+            norm_type='batch', 
+            data_dim=2, 
+            kernel=24, 
+            stride=4, 
+            padding=12):
         super().__init__()
-        self.conv = get_conv(data_dim)(in_filters, out_filters, 4, 2, 1)
-        self.norm = get_instance_norm(data_dim)(out_filters)
+        self.conv = get_conv(data_dim)(in_filters, out_filters, kernel, stride, padding)
+        self.norm = get_norm(type=norm_type, data_dim=data_dim)(out_filters)
         self.leakyrelu = nn.LeakyReLU(0.2)
 
     def forward(self, x):
-        return self.leakyrelu(self.norm(self.conv(x)))
+        print(x.shape)
+        x = self.conv(x)
+        print(x.shape)
+        x = self.norm(x)
+        print(x.shape)
+        x = self.leakyrelu(x)
+        print(x.shape)
+        return x
 
+    @classmethod
+    def audio_block(cls, in_filters, out_filters):
+        return cls(in_filters, out_filters, norm_type=None, data_dim=1, kernel=24, stride=4, padding=11)
 
-class DownSampleBatchConvBlock(nn.Module):
-    def __init__(self, in_filters, out_filters, data_dim=2):
-        super().__init__()
-        self.conv = get_conv(data_dim)(in_filters, out_filters, 4, 2, 1)
-        self.norm = get_batch_norm(data_dim)(out_filters)
-        self.leakyrelu = nn.LeakyReLU(0.2)
-
-    def forward(self, x):
-        return self.leakyrelu(self.norm(self.conv(x)))
+    @classmethod
+    def image_block(cls, in_filters, out_filters, norm_type='batch'):
+        return cls(in_filters, out_filters, norm_type=norm_type, data_dim=2, kernel=4, stride=2, padding=1)
 
 
 class Encoder(nn.Module):
@@ -30,7 +42,7 @@ class Encoder(nn.Module):
             self, nc, ndf, data_shape,
             depth=5,
             res_blocks=tuple(0 for _ in range(5)),
-            downsample_block_type=DownSampleInstanceConvBlock,
+            downsample_block_type='image_block',
         ):
         super(Encoder, self).__init__()
 
@@ -54,11 +66,11 @@ class Encoder(nn.Module):
                     data_dim=self.data_dim,
                 ))
                 in_filters = ndf_cur
-            data_shape = (tuple(int(d/2) for d in data_shape))
+            factor = 2 if downsample_block_type == 'image_block' else 4
+            data_shape = (tuple(int(d/factor) for d in data_shape))
             layers.append(
-                downsample_block_type(
+                getattr(DownSampleBlock, downsample_block_type)(
                     in_filters, ndf_cur, 
-                    data_dim=self.data_dim
                 ))
 
         self.output_shape = (ndf_cur, *data_shape)

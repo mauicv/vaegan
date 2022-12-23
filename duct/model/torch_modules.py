@@ -11,24 +11,17 @@ def get_conv(data_dim=2):
         ValueError('data_dim must be 1, 2, or 3')
     )
 
-def get_instance_norm(data_dim=2):
+def get_norm(type='batch', data_dim=2):
     return {
-        1: nn.InstanceNorm1d,
-        2: nn.InstanceNorm2d,
-        3: nn.InstanceNorm3d,
+        1: {'batch': nn.BatchNorm1d, 'instance': nn.InstanceNorm1d, None: nn.Identity},
+        2: {'batch': nn.BatchNorm2d, 'instance': nn.InstanceNorm2d, None: nn.Identity},
+        3: {'batch': nn.BatchNorm3d, 'instance': nn.InstanceNorm3d, None: nn.Identity},
     }.get(
         data_dim,
         ValueError('data_dim must be 1, 2, or 3')
-    )
-
-def get_batch_norm(data_dim=2):
-    return {
-        1: nn.BatchNorm1d,
-        2: nn.BatchNorm2d,
-        3: nn.BatchNorm3d,
-    }.get(
-        data_dim,
-        ValueError('data_dim must be 1, 2, or 3')
+    ).get(
+        type,
+        ValueError('type must be "batch" or "instance"')
     )
 
 
