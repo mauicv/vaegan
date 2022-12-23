@@ -19,13 +19,9 @@ class DownSampleBlock(nn.Module):
         self.leakyrelu = nn.LeakyReLU(0.2)
 
     def forward(self, x):
-        print(x.shape)
         x = self.conv(x)
-        print(x.shape)
         x = self.norm(x)
-        print(x.shape)
         x = self.leakyrelu(x)
-        print(x.shape)
         return x
 
     @classmethod
