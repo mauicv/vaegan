@@ -21,12 +21,12 @@ class UpSampleBlock(nn.Module):
 
     @classmethod
     def audio_block(cls, in_filters, out_filters):
-        return cls(in_filters, out_filters, norm_type=None, data_dim=1, 
+        return cls(in_filters, out_filters, norm_type='batch', data_dim=1, 
                    scale_factor=4, kernel=25, padding=12)
 
     @classmethod
-    def image_block(cls, in_filters, out_filters, norm_type='batch'):
-        return cls(in_filters, out_filters, norm_type=norm_type, data_dim=2, 
+    def image_block(cls, in_filters, out_filters):
+        return cls(in_filters, out_filters, norm_type='batch', data_dim=2, 
                    scale_factor=2, kernel=3, padding=1)
 
 
