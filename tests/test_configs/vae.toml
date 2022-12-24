@@ -5,4 +5,5 @@ ndf = 16
 data_shape = [ 128, 128,]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
+attn_blocks = [0, 0, 0, 0, 0, 0]
 latent_dim = 2024

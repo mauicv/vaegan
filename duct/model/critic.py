@@ -10,6 +10,7 @@ class Critic(nn.Module):
           data_shape,
           depth=5, 
           res_blocks=tuple(0 for _ in range(5)),
+          attn_blocks=tuple(0 for _ in range(5)),
           downsample_block_type='image_block',
         ):
         super(Critic, self).__init__()
@@ -19,6 +20,7 @@ class Critic(nn.Module):
             data_shape=data_shape,
             res_blocks=res_blocks,
             downsample_block_type=downsample_block_type,
+            attn_blocks=attn_blocks
         )
         self.fc = nn.Linear(np.prod(self.encoder.output_shape), 1)
 

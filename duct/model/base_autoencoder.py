@@ -13,6 +13,7 @@ class BaseAutoEncoder(nn.Module):
             data_shape,
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
+            attn_blocks=tuple(0 for _ in range(5)),
             output_activation='Sigmoid',
             downsample_block_type='image_block',
             upsample_block_type='image_block'
@@ -24,12 +25,14 @@ class BaseAutoEncoder(nn.Module):
             data_shape=data_shape,
             res_blocks=res_blocks,
             downsample_block_type=downsample_block_type,
+            attn_blocks=attn_blocks
         )
         self.decoder = Decoder(
             nc=nc, ndf=ndf, depth=depth,
             data_shape=data_shape,
             res_blocks=res_blocks,
             upsample_block_type=upsample_block_type,
+            attn_blocks=attn_blocks
         )
         self.output_activation = getattr(torch.nn, output_activation)() \
             if output_activation else None

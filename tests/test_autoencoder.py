@@ -12,6 +12,7 @@ def test_auto_encoder(res_blocks):
         depth=3,
         data_shape=(32, 32),
         res_blocks=res_blocks,
+        attn_blocks=(0, 0, 0),
     )
 
     t_shape = (64, 3, 32, 32)
@@ -28,6 +29,7 @@ def test_var_auto_encoder(res_blocks):
         depth=3,
         data_shape=(32, 32),
         res_blocks=res_blocks,
+        attn_blocks=(0, 0, 0),
     )
 
     t_shape = (64, 3, 32, 32)
@@ -47,6 +49,7 @@ def test_nll_var_auto_encoder(res_blocks):
         depth=3,
         data_shape=(32, 32),
         res_blocks=res_blocks,
+        attn_blocks=(0, 0, 1),
     )
 
     t_shape = (64, 3, 32, 32)
@@ -66,6 +69,7 @@ def test_vq_var_auto_encoder_2d(res_blocks):
         depth=3,
         data_shape=(32, 32),
         res_blocks=res_blocks,
+        attn_blocks=(0, 0, 1),
         commitment_cost=1,
         num_embeddings=100
     )
@@ -86,6 +90,7 @@ def test_vq_var_auto_encoder_1d(res_blocks):
         depth=4,
         data_shape=(8192, ),
         res_blocks=res_blocks,
+        attn_blocks=(0, 0, 0, 1),
         commitment_cost=1,
         num_embeddings=100,
         output_activation='Sigmoid',
@@ -106,6 +111,7 @@ def test_vq_var_auto_encoder_1d_aud():
         2, 16, depth=5,
         data_shape=(8192, ),
         res_blocks=(0, 0, 0, 0, 0),
+        attn_blocks=(0, 0, 0, 0, 0),
         commitment_cost=1,
         num_embeddings=100,
         output_activation='Tanh',

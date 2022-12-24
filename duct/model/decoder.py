@@ -1,6 +1,8 @@
 import torch.nn as nn
 from duct.model.resnet import ResnetBlock
 from duct.model.torch_modules import get_conv, get_norm, get_rep_pad, get_upsample
+from duct.model.attention import get_attn
+
 
 class UpSampleBlock(nn.Module):
     def __init__(self, in_filters, out_filters, data_dim, norm_type, scale_factor, kernel, padding):
@@ -37,12 +39,15 @@ class Decoder(nn.Module):
             ndf,
             data_shape,
             depth=5,
-            upsample_block_type='image_block',
             res_blocks=tuple(0 for _ in range(5)),
+            attn_blocks=tuple(0 for _ in range(5)),
+            upsample_block_type='image_block',
         ):
         super(Decoder, self).__init__()
 
-        assert len(res_blocks) == depth
+        assert len(res_blocks) == depth, 'len(res_blocks) != depth'
+        assert len(attn_blocks) == depth, 'len(attn_blocks) != depth'
+
         self.data_dim = len(data_shape)
 
         self.nc = nc
@@ -61,6 +66,8 @@ class Decoder(nn.Module):
                 layers.append(ResnetBlock(ndf_cur, out_filters, 
                     data_dim=self.data_dim))
                 out_filters = ndf_cur
+            for _ in range(attn_blocks[ind]):
+                layers.append(get_attn(self.data_dim)(out_filters))
             layers.append(getattr(UpSampleBlock, upsample_block_type)(ndf_cur, out_filters))
 
         self.layers = layers[::-1]

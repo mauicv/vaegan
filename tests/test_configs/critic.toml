@@ -5,6 +5,7 @@ ndf = 16
 data_shape = [ 128, 128,]
 depth = 6
 res_blocks = [0, 1, 0, 1, 1, 0]
+attn_blocks = [0, 0, 0, 0, 0, 1]
 
 [[critic.opt_cfgs]]
 class='Adam'

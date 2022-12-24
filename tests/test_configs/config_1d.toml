@@ -8,6 +8,7 @@ ndf = 16
 data_shape = [ 8192, ]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
+attn_blocks = [0, 0, 0, 0, 0, 0]
 output_activation = 'Tanh'
 upsample_block_type = 'audio_block'
 downsample_block_type = 'audio_block'
@@ -31,6 +32,7 @@ ndf = 16
 data_shape = [ 128, ]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
+attn_blocks = [0, 0, 0, 0, 0, 1]
 
 [[critic.opt_cfgs]]
 class='Adam'

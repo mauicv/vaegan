@@ -1,7 +1,7 @@
 import torch.nn as nn
 from duct.model.resnet import ResnetBlock
 from duct.model.torch_modules import get_conv, get_norm
-
+from duct.model.attention import get_attn
 
 class DownSampleBlock(nn.Module):
     def __init__(
@@ -38,13 +38,15 @@ class DownSampleBlock(nn.Module):
 class Encoder(nn.Module):
     def __init__(
             self, nc, ndf, data_shape,
-            depth=5,
+            depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
+            attn_blocks=tuple(0 for _ in range(5)),
             downsample_block_type='image_block',
         ):
         super(Encoder, self).__init__()
 
         assert len(res_blocks) == depth, 'len(res_blocks) != depth'
+        assert len(attn_blocks) == depth, 'len(attn_blocks) != depth'
         self.data_dim = len(data_shape)
         self.nc = nc
         self.ndf = ndf
@@ -64,6 +66,8 @@ class Encoder(nn.Module):
                     data_dim=self.data_dim,
                 ))
                 in_filters = ndf_cur
+            for _ in range(attn_blocks[ind]):
+                layers.append(get_attn(data_dim=self.data_dim)(in_filters))
             factor = 2 if downsample_block_type == 'image_block' else 4
             data_shape = (tuple(int(d/factor) for d in data_shape))
             layers.append(

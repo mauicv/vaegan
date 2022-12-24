@@ -12,16 +12,18 @@ class AutoEncoder(BaseAutoEncoder):
             data_shape,
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
+            attn_blocks=tuple(0 for _ in range(5)),
             latent_dim=None,
             downsample_block_type='image_block',
-            upsample_block_type='image_block'
+            upsample_block_type='image_block',
         ):
         super(AutoEncoder, self).__init__(
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
             downsample_block_type=downsample_block_type,
-            upsample_block_type=upsample_block_type
+            upsample_block_type=upsample_block_type,
+            attn_blocks=attn_blocks
         )
         self.latent_space = LinearLatentSpace(
             input_shape=self.encoder.output_shape, 
@@ -38,6 +40,7 @@ class VarAutoEncoder(BaseAutoEncoder):
             data_shape,
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
+            attn_blocks=tuple(0 for _ in range(5)),
             latent_dim=None,
             downsample_block_type='image_block',
             upsample_block_type='image_block'
@@ -47,7 +50,8 @@ class VarAutoEncoder(BaseAutoEncoder):
             data_shape=data_shape,
             res_blocks=res_blocks,
             downsample_block_type=downsample_block_type,
-            upsample_block_type=upsample_block_type
+            upsample_block_type=upsample_block_type,
+            attn_blocks=attn_blocks
         )
         self.latent_space = StochasticLinearLatentSpace(
             input_shape=self.encoder.output_shape, 
@@ -69,6 +73,7 @@ class NLLVarAutoEncoder(BaseAutoEncoder):
             data_shape,
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
+            attn_blocks=tuple(0 for _ in range(5)),
             latent_dim=None,
             downsample_block_type='image_block',
             upsample_block_type='image_block'
@@ -80,7 +85,8 @@ class NLLVarAutoEncoder(BaseAutoEncoder):
             data_shape=data_shape,
             res_blocks=res_blocks,
             downsample_block_type=downsample_block_type,
-            upsample_block_type=upsample_block_type
+            upsample_block_type=upsample_block_type,
+            attn_blocks=attn_blocks
         )
         self.latent_space = StochasticLatentSpace(
             input_shape=self.encoder.output_shape, 
@@ -102,6 +108,7 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             data_shape,
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
+            attn_blocks=tuple(0 for _ in range(5)),
             num_embeddings=25,
             commitment_cost=1,
             output_activation='Sigmoid',
@@ -118,7 +125,8 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             res_blocks=res_blocks,
             output_activation=output_activation,
             downsample_block_type=downsample_block_type,
-            upsample_block_type=upsample_block_type
+            upsample_block_type=upsample_block_type,
+            attn_blocks=attn_blocks
         )
 
         C, *_ = self.encoder.output_shape
