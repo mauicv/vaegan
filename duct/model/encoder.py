@@ -73,7 +73,8 @@ class Encoder(nn.Module):
                 in_filters = ndf_cur
             for _ in range(attn_blocks[ind]):
                 layers.append(get_attn(data_dim=self.data_dim)(in_filters))
-            factor = 2 if downsample_block_type == 'image_block' else 4
+            factor = 2 if downsample_block_type in \
+                {'image_block', 'audio_block_v2'} else 4
             data_shape = (tuple(int(d/factor) for d in data_shape))
             layers.append(
                 getattr(DownSampleBlock, downsample_block_type)(
