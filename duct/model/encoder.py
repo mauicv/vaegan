@@ -30,6 +30,11 @@ class DownSampleBlock(nn.Module):
                    data_dim=1, kernel=24, stride=4, padding=11)
 
     @classmethod
+    def audio_block_v2(cls, in_filters, out_filters):
+        return cls(in_filters, out_filters, norm_type='batch', 
+                   data_dim=1, kernel=12, stride=2, padding=5)
+
+    @classmethod
     def image_block(cls, in_filters, out_filters):
         return cls(in_filters, out_filters, norm_type='batch',
                    data_dim=2, kernel=4, stride=2, padding=1)

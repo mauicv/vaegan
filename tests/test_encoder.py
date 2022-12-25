@@ -42,3 +42,14 @@ def test_encoder_audio(res_blocks):
     x = encoder(t)
     assert x.shape == (64, 256, 32)
 
+
+def test_encoder_audio_v2():
+    encoder = Encoder(2, 16, depth=3,
+                      data_shape=(8192, ),
+                      res_blocks=(0, 0, 0),
+                      attn_blocks=(0, 0, 0),
+                      downsample_block_type='audio_block_v2',)
+    t = torch.randn((64, 2, 8192))
+    x = encoder(t)
+    assert x.shape == (64, 128, 1024)
+

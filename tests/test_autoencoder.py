@@ -126,3 +126,25 @@ def test_vq_var_auto_encoder_1d_aud():
     assert y.shape == t_shape
     assert encoded.shape == (64, 8, 100)
     assert autoencoder.call(t).shape == t_shape
+
+
+def test_vq_var_auto_encoder_1d_v2_aud():
+    autoencoder = VQVarAutoEncoder(
+        2, 16, depth=3,
+        data_shape=(8192, ),
+        res_blocks=(0, 0, 0),
+        attn_blocks=(0, 0, 0),
+        commitment_cost=1,
+        num_embeddings=100,
+        output_activation='Tanh',
+        upsample_block_type='audio_block_v2',
+        downsample_block_type='audio_block_v2'
+    )
+
+    t_shape = (64, 2, 8192)
+    t = torch.zeros(t_shape)
+    y, _, _, encoded = autoencoder(t)
+    assert -1 <= y.min() < y.max() <= 1
+    assert encoded.shape == (64, 1024, 100)
+    assert y.shape == t_shape
+    assert autoencoder.call(t).shape == t_shape

@@ -34,3 +34,13 @@ def test_decoder_audio(res_blocks):
     t = torch.randn((64, 256, 32))
     x = decoder(t)
     assert x.shape == (64, 2, 8192)
+
+
+def test_decoder_audio_v2():
+    decoder = Decoder(2, 16, depth=3, data_shape=(8192, ), 
+                      res_blocks=(0, 0, 0),
+                      attn_blocks=(0, 0, 0),
+                      upsample_block_type='audio_block_v2')
+    t = torch.randn((64, 128, 1024))
+    x = decoder(t)
+    assert x.shape == (64, 2, 8192)
