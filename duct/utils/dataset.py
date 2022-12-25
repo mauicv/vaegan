@@ -11,11 +11,15 @@ import os
 import random
 
 
-def get_dataset(target='celeba', path='./datasets/celeba', batch_size=64, **kwargs):
+def get_dataset(target='celeba', path='./datasets/celeba', batch_size=64, num_workers=0, **kwargs):
     return {
         'celeba': get_celeba,
         'fma_small': get_fma_small,
-    }[target](path, batch_size, **kwargs)
+    }[target](
+        path, 
+        batch_size=batch_size, 
+        num_workers=num_workers, 
+        **kwargs)
 
 
 class CelebADataset(Dataset):
@@ -45,7 +49,11 @@ class CelebADataset(Dataset):
         return image
 
 
-def get_celeba(path='./datasets/celeba', data_shape=(128, 128), batch_size=64):
+def get_celeba(
+        path='./datasets/celeba', 
+        data_shape=(128, 128), 
+        batch_size=64,
+        num_workers=0):
     path = Path(path) 
     if not (path / 'img_align_celeba').is_dir():
         raise ValueError('Dataset not downloaded or unzipped')
@@ -64,7 +72,8 @@ def get_celeba(path='./datasets/celeba', data_shape=(128, 128), batch_size=64):
     loader = torch.utils.data.DataLoader(dataset=dataset,
                                          batch_size=batch_size,
                                          shuffle=True,
-                                         drop_last=True)
+                                         drop_last=True,
+                                         num_workers=num_workers)
 
     return loader, dataset
 
@@ -107,7 +116,8 @@ class FMASmallDataset(Dataset):
 
 def get_fma_small(
         path='./datasets', 
-        batch_size=64, 
+        batch_size=64,
+        num_workers=0,
         **kwargs):
     path = Path(path) / 'fma_small'
     dataset = FMASmallDataset(
@@ -117,6 +127,7 @@ def get_fma_small(
     loader = DataLoader(
         dataset, 
         batch_size=batch_size, 
-        shuffle=True
+        shuffle=True,
+        num_workers=num_workers
     )
     return loader, dataset
