@@ -3,6 +3,7 @@ from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncod
     VQVarAutoEncoder
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
+from duct.model.transformer import Transformer
 from torch.optim import Adam
 import pytest
 
@@ -157,3 +158,18 @@ def test_1d_vq_config(tmp_path):
     path = tmp_path / 'model.pt'
     a.save_state(path)
     a.load_state(path)
+
+
+def test_util_mixin_transformer(tmp_path):
+    exp = Experiment.from_file(path='./tests/test_configs/transformer.toml')
+    assert isinstance(exp.transformer, Transformer)
+    assert isinstance(exp.transformer_opt, Adam)
+
+    assert exp.transformer.n_heads == 8
+    assert exp.transformer.emb_dim == 256
+    assert exp.transformer.emb_num == 10
+    assert exp.transformer.depth == 5
+
+    path = tmp_path / 'model.pt'
+    exp.save_state(path)
+    exp.load_state(path)

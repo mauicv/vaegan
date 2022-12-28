@@ -1,0 +1,11 @@
+[transformer]
+class = 'Transformer'
+n_heads = 8
+emb_dim = 256
+emb_num = 10
+depth = 5
+
+[[transformer.opt_cfgs]]
+class='Adam'
+name='transformer_opt'
+lr = 0.0005

@@ -3,7 +3,7 @@ and adjusted.
 """
 import torch
 from torch import nn
-from duct.model.torch_modules import get_conv, get_norm
+from duct.model.torch_modules import get_norm
 
 
 def get_attn(data_dim):
