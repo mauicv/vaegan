@@ -56,9 +56,9 @@ class AttnBlock(nn.Module):
         w_ = torch.nn.functional.softmax(w_, dim=-1)
 
         # attend to values
-        h_ = w_ @ v # b, nh, l, hs
+        h_ = w_ @ v  # b, nh, l, hs
         h_ = h_ \
-            .transpose_(1,2) \
+            .transpose(1,2) \
             .reshape(-1, l, self.emb_dim) \
             .contiguous() # b, l, nh*hs
         h_ = self.proj_out(h_)
