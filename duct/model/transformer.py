@@ -1,3 +1,7 @@
+"""Taken from https://github.com/CompVis/taming-transformers/blob/3ba01b241669f5ade541ce990f7650a3b8f65318/taming/modules/transformer/mingpt.py
+and adjusted."""
+
+
 import math
 import torch
 import torch.nn as nn
