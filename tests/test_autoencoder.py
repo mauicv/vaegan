@@ -148,3 +148,4 @@ def test_vq_var_auto_encoder_1d_v2_aud():
     assert encoded.shape == (64, 1024, 100)
     assert y.shape == t_shape
     assert autoencoder.call(t).shape == t_shape
+    assert autoencoder.encode(t).shape == encoded.shape
