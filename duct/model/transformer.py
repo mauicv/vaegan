@@ -53,6 +53,11 @@ class AttnBlock(nn.Module):
         # compute attention
         w_ = q @ k.transpose(2,3) # b, nh, l, l
         w_ = w_ * (int(self.head_size)**(-0.5))
+
+        mask = torch.tril(torch.ones(l, l))
+        if next(self.parameters()).is_cuda: mask = mask.cuda()
+        masked_indices = mask[None, None, :l, :l] == 0
+        w_ = w_.masked_fill(masked_indices, float('-inf'))
         w_ = torch.nn.functional.softmax(w_, dim=-1)
 
         # attend to values
@@ -72,7 +77,7 @@ class TransformerBlock(nn.Module):
         self.emb_dim = emb_dim
         self.attn = AttnBlock(
             emb_dim, 
-            n_heads=n_heads
+            n_heads=n_heads,
         )
         self.mlp = nn.Sequential(
             nn.Linear(emb_dim, emb_dim),
@@ -98,7 +103,7 @@ class Transformer(nn.Module):
         for _ in range(depth):
             transformer_block = TransformerBlock(
                 emb_dim, 
-                n_heads=n_heads
+                n_heads=n_heads,
             )
             self.layers.append(transformer_block)
 
