@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
-from duct.model.decoder import Decoder, UpSampleBlock
-from duct.model.encoder import Encoder, DownSampleBlock
+from duct.model.decoder import Decoder
+from duct.model.encoder import Encoder
 from itertools import chain
 
 

@@ -193,3 +193,6 @@ class VQLatentSpace1D(nn.Module):
         quantized = quantized.permute(0, 2, 1).contiguous()
         encodings = encodings.reshape((b, w, self._num_embeddings))
         return [quantized, loss, perplexity, encodings]
+
+    def decode(self, tokens):
+        return self._embedding(tokens)

@@ -107,10 +107,11 @@ class FMASmallDataset(Dataset):
             aud = AudioUtil.rechannel(aud)
             aud = AudioUtil.resample(aud, self.sr)
             aud = AudioUtil.random_portion(aud, self.duration)
-        except RuntimeError as err:
+        except (RuntimeError, KeyError) as err:
             print(err)
             n = random.randint(0, len(self))
             return self[n]
+        
         return aud[0]
 
 
