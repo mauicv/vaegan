@@ -1,6 +1,8 @@
 import pytest
 import torch
-from duct.model.transformer import Transformer, TransformerBlock, AttnBlock, get_local_image_mask, get_causal_mask
+from duct.model.transformer import Transformer, sample
+from duct.model.transformer.block import TransformerBlock, AttnBlock
+from duct.model.transformer.mask import get_local_image_mask, get_causal_mask
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
@@ -46,3 +48,15 @@ def test_transformer_aud_mask(n_heads):
     y = transformer(x, mask=mask)
     assert y.shape == (64, 128, 10)
     assert torch.nan not in y
+
+
+def test_sample_trasnformer():
+    transformer = Transformer(n_heads=1, emb_dim=256, emb_num=10, depth=5, block_size=8*8)
+    x = torch.randint(0, 10, (8, ))
+    _, mask = get_local_image_mask((8,8), (4, 4))
+    y = sample(transformer, x, sample=False, mask=mask)
+    assert torch.all(y[:x.shape[0]] == x)
+    assert torch.any(y[x.shape[0]:] > 0)
+    y = sample(transformer, x, sample=True, mask=mask)
+    assert torch.all(y[:x.shape[0]] == x)
+    assert torch.any(y[x.shape[0]:] > 0)
