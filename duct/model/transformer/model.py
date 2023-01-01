@@ -24,9 +24,6 @@ def get_timestep_embedding(timesteps, embedding_dim):
 
 @torch.no_grad()
 def sample(model, x, temperature=1.0, sample=False, mask=None):
-    """
-    Taken from https://github.com/CompVis/taming-transformers/blob/master/taming/modules/transformer/mingpt.py
-    """
     l = x.shape[0]
     model.eval()
     block_size = model.block_size

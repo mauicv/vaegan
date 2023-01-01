@@ -14,7 +14,7 @@ class AttnBlock(nn.Module):
         self.k = torch.nn.Linear(emb_dim, emb_dim)
         self.v = torch.nn.Linear(emb_dim, emb_dim)
         self.proj_out = torch.nn.Linear(emb_dim, emb_dim)
-        self.head_size = self.emb_dim//self.n_heads
+        self.head_size = self.emb_dim // self.n_heads
 
     def forward(self, x, mask=None):
         _, l, _ = x.shape
@@ -44,12 +44,12 @@ class AttnBlock(nn.Module):
         # attend to values
         h_ = w_ @ v  # b, nh, l, hs
         h_ = h_ \
-            .transpose(1,2) \
+            .transpose(1, 2) \
             .reshape(-1, l, self.emb_dim) \
             .contiguous() # b, l, nh*hs
         h_ = self.proj_out(h_)
 
-        return x+h_
+        return h_
 
 
 class TransformerBlock(nn.Module):
@@ -67,6 +67,6 @@ class TransformerBlock(nn.Module):
         )
 
     def forward(self, x, mask=None):
-        x = self.attn(x, mask=mask)
-        x = self.mlp(x)
+        x = x + self.attn(x, mask=mask)
+        x = x + self.mlp(x)
         return x
