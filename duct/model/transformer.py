@@ -17,8 +17,6 @@ def get_timestep_embedding(timesteps, embedding_dim):
     emb = torch.cat([torch.sin(emb), torch.cos(emb)], dim=1)
     if embedding_dim % 2 == 1:
         emb = torch.nn.functional.pad(emb, (0,1,0,0))
-    if torch.cuda.is_available():
-        emb = emb.cuda()
     return emb[None]
 
 
@@ -42,7 +40,7 @@ def get_local_image_mask(image_size=(32, 32), patch_size=(6, 6)):
                     boundary_cond_j = top_l_j + jp < w and top_l_j + jp >= 0
                     boundary_conds = boundary_cond_i and boundary_cond_j 
                     if boundary_conds:
-                        if ip < int(patch_h/2) or (ip == int(patch_h/2) and jp < int(patch_w/2)):
+                        if ip < int(patch_h/2) or (ip == int(patch_h/2) and jp <= int(patch_w/2)):
                             mask[i, j, top_l_i + ip, top_l_j + jp] = 1
 
     flattend_mask = mask.reshape(h * w, h * w)
@@ -142,6 +140,7 @@ class Transformer(nn.Module):
         _, l, emb_dim = x.shape
         pos = torch.tensor([i for i in range(l)])
         pos_emb = get_timestep_embedding(pos, emb_dim)
+        if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
         x = x + pos_emb
 
         for layer in self.layers:
