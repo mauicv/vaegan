@@ -2,7 +2,7 @@ from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncod
     VQVarAutoEncoder, VQVarAutoEncoder
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
-from duct.model.transformer import Transformer
+from duct.model.transformer.model import Transformer
 
 
 

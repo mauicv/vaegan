@@ -1,6 +1,6 @@
 import pytest
 import torch
-from duct.model.transformer import Transformer, sample
+from duct.model.transformer.model import Transformer, sample
 from duct.model.transformer.block import TransformerBlock, AttnBlock
 from duct.model.transformer.mask import get_local_image_mask, get_causal_mask
 
