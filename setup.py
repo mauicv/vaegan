@@ -2,9 +2,9 @@ from distutils.core import setup
 
 
 setup(
-    name='duct-2d',
+    name='duct',
     version='0.1.0',
-    description='ML tools for generative model experiments using torch for 2d data',
+    description='ML tools for generative model experiments using torch',
     author='Alexander Athorne',
     author_email='alexander.athorne@gmail.com',
     url='https://github.com/mauicv/vaegan/',
