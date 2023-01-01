@@ -11,7 +11,7 @@ setup(
     packages=[
         'duct.model',
         'duct.utils',
-        'duct.model.latent_spaces'
+        'duct.model.latent_spaces',
         'duct.model.transformer'
     ],
     install_requires=[
