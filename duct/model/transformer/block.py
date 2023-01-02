@@ -15,6 +15,8 @@ class AttnBlock(nn.Module):
         self.v = torch.nn.Linear(emb_dim, emb_dim)
         self.proj_out = torch.nn.Linear(emb_dim, emb_dim)
         self.head_size = self.emb_dim // self.n_heads
+        self.attn_drop = nn.Dropout(0.1)
+        self.resid_drop = nn.Dropout(0.1)
 
     def forward(self, x, mask=None):
         _, l, _ = x.shape
@@ -40,6 +42,7 @@ class AttnBlock(nn.Module):
             w_ = w_.masked_fill(mask, float('-inf'))
 
         w_ = torch.nn.functional.softmax(w_, dim=-1)
+        w_ = self.attn_drop(w_)
 
         # attend to values
         h_ = w_ @ v  # b, nh, l, hs
@@ -47,7 +50,7 @@ class AttnBlock(nn.Module):
             .transpose(1, 2) \
             .reshape(-1, l, self.emb_dim) \
             .contiguous() # b, l, nh*hs
-        h_ = self.proj_out(h_)
+        h_ = self.resid_drop(self.proj_out(h_))
 
         return h_
 
@@ -61,9 +64,10 @@ class TransformerBlock(nn.Module):
             n_heads=n_heads,
         )
         self.mlp = nn.Sequential(
-            nn.Linear(emb_dim, emb_dim),
+            nn.Linear(emb_dim, 4 * emb_dim),
             nn.GELU(),
-            nn.Linear(emb_dim, emb_dim),
+            nn.Linear(4 * emb_dim, emb_dim),
+            nn.Dropout(0.1)
         )
 
     def forward(self, x, mask=None):
