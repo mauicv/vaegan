@@ -61,6 +61,7 @@ class Transformer(nn.Module):
             )
             self.layers.append(transformer_block)
         self.linear = nn.Linear(emb_dim, emb_num)
+        self.drop = nn.Dropout(0.1)
         self.apply(self._init_weights)
 
 
@@ -80,6 +81,7 @@ class Transformer(nn.Module):
         pos_emb = get_timestep_embedding(pos, emb_dim)
         if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
         x = x + pos_emb
+        x = self.drop(x)
 
         for layer in self.layers:
             x = layer(x, mask=mask)

@@ -59,6 +59,8 @@ class TransformerBlock(nn.Module):
     def __init__(self, emb_dim, n_heads=1):
         super().__init__()
         self.emb_dim = emb_dim
+        self.ln1 = nn.LayerNorm(emb_dim)
+        self.ln2 = nn.LayerNorm(emb_dim)
         self.attn = AttnBlock(
             emb_dim, 
             n_heads=n_heads,
@@ -71,6 +73,6 @@ class TransformerBlock(nn.Module):
         )
 
     def forward(self, x, mask=None):
-        x = x + self.attn(x, mask=mask)
-        x = x + self.mlp(x)
+        x = x + self.attn(self.ln1(x), mask=mask)
+        x = x + self.mlp(self.ln2(x))
         return x
