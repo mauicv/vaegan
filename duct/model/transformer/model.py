@@ -22,8 +22,15 @@ def get_timestep_embedding(timesteps, embedding_dim):
     return emb[None]
 
 
+def top_k_logits(logits, k):
+    v, _ = torch.topk(logits, k)
+    out = logits.clone()
+    out[out < v[..., [-1]]] = -float('Inf')
+    return out
+
+
 @torch.no_grad()
-def sample(model, x, temperature=1.0, sample=False, mask=None):
+def sample(model, x, temperature=1.0, top_k=50, sample=True, mask=None):
     l = x.shape[0]
     model.eval()
     block_size = model.block_size
@@ -35,6 +42,9 @@ def sample(model, x, temperature=1.0, sample=False, mask=None):
         logits = model(seq, mask=mask)
         logits = logits[:, k, :] / temperature
         probs = F.softmax(logits, dim=-1)
+        if top_k is not None:
+            logits = top_k_logits(logits, top_k)
+
         if sample:
             ix = torch.multinomial(probs, num_samples=1)
         else:
