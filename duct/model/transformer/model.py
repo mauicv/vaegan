@@ -39,7 +39,7 @@ def sample(model, x, temperature=1.0, top_k=50, sample=True, mask=None):
 
     for k in range(l, block_size):
         logits = model(seq, mask=mask)
-        logits = logits[:, k, :] / temperature
+        logits = logits[:, k-1, :] / temperature
         probs = F.softmax(logits, dim=-1)
         if top_k is not None:
             logits = top_k_logits(logits, top_k)
