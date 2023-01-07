@@ -74,3 +74,18 @@ def test_sample_trasnformer():
     y = sample(transformer, x, sample=True, mask=mask, top_k=None)
     assert torch.all(y[:x.shape[0]] == x)
     assert torch.any(y[x.shape[0]:] > 0)
+
+
+def test_transformer_weight_decay_params():
+    transformer = Transformer(
+        n_heads=8, 
+        emb_dim=256, 
+        emb_num=10, 
+        depth=5, 
+        block_size=128, 
+        trainable_pos_embeddings=True)
+    param_groups = transformer.get_parameter_groups()
+    num_decay_params = len(param_groups[0]['params'])
+    num_no_decay_params = len(param_groups[1]['params'])
+    total_params = len(list(transformer.parameters()))
+    assert num_decay_params + num_no_decay_params == total_params

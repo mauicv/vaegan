@@ -4,9 +4,10 @@ n_heads = 8
 emb_dim = 256
 emb_num = 10
 depth = 5
-block_size=128
+block_size = 128
 
 [[transformer.opt_cfgs]]
-class='Adam'
-name='transformer_opt'
+class = 'Adam'
+name = 'transformer_opt'
+parameter_set = 'get_parameter_groups'
 lr = 0.0005

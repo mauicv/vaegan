@@ -74,12 +74,17 @@ class ConfigMixin(ExperimentBase):
     def init_opt(self, model, opt_cfg):
         opt_cls = opt_cfg.pop('class', None)
         opt_name = opt_cfg.pop('name', None)
-        paramter_set_fn = opt_cfg.pop('parameter_set', None)
+        parameter_set_fn = opt_cfg.pop('parameter_set', None)
         opt_cls = getattr(torch.optim, opt_cls)
-        if paramter_set_fn is not None:
-            parameters = getattr(model, paramter_set_fn)()
+        if parameter_set_fn is not None:
+            parameters = getattr(model, parameter_set_fn)()
         else:
             parameters = model.parameters()
+
+        if opt_cls == 'AdamW':
+            weight_decay = opt_cfg.pop('weight_decay', 0.01)
+            parameters[0]['weight_decay'] = weight_decay
+
         setattr(self, opt_name, opt_cls(parameters, **opt_cfg))
         self.sateful_objs.append(opt_name)
         self.optimizers.append(opt_name)

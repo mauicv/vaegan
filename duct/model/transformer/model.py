@@ -109,3 +109,25 @@ class Transformer(nn.Module):
             x = layer(x, mask=mask)
         logits = self.linear(x)
         return logits
+
+    def get_weight_decay_params(self):
+        for _, module in self.named_modules():
+            if isinstance(module, torch.nn.Linear):
+                for name, param in module.named_parameters():
+                    if 'weight' in name:
+                        yield param
+
+    def get_parameter_groups(self):
+        decay_params = set(self.get_weight_decay_params())
+        no_decay_params = [p for p in self.parameters() if p not in decay_params]
+        groups = [
+            {
+                'params': list(decay_params),
+                'weight_decay': 0.01,
+            },
+            {
+                'params': no_decay_params,
+                'weight_decay': 0.0,
+            },
+        ]
+        return groups
