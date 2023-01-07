@@ -7,7 +7,7 @@ depth = 5
 block_size = 128
 
 [[transformer.opt_cfgs]]
-class = 'Adam'
+class = 'AdamW'
 name = 'transformer_opt'
 parameter_set = 'get_parameter_groups'
 lr = 0.0005

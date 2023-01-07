@@ -4,7 +4,7 @@ from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncod
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 from duct.model.transformer.model import Transformer
-from torch.optim import Adam
+from torch.optim import Adam, AdamW
 import pytest
 
 
@@ -163,7 +163,7 @@ def test_1d_vq_config(tmp_path):
 def test_util_mixin_transformer(tmp_path):
     exp = Experiment.from_file(path='./tests/test_configs/transformer.toml')
     assert isinstance(exp.transformer, Transformer)
-    assert isinstance(exp.transformer_opt, Adam)
+    assert isinstance(exp.transformer_opt, AdamW)
 
     assert exp.transformer.n_heads == 8
     assert exp.transformer.emb_dim == 256
