@@ -10,7 +10,6 @@ from torch.nn import functional as F
 
 
 def get_timestep_embedding(timesteps, embedding_dim):
-    assert len(timesteps.shape) == 1
     half_dim = embedding_dim // 2
     emb = math.log(10000) / (half_dim - 1)
     emb = torch.exp(torch.arange(half_dim, dtype=torch.float32) * -emb)
@@ -55,9 +54,19 @@ def sample(model, x, temperature=1.0, top_k=50, sample=True, mask=None):
 
 
 class Transformer(nn.Module):
-    def __init__(self, emb_dim, emb_num, n_heads=1, depth=5, block_size=8*8):
+    def __init__(
+            self, 
+            emb_dim, 
+            emb_num, 
+            block_size, 
+            n_heads=1, 
+            depth=5, 
+            trainable_pos_embeddings=True
+        ):
         super().__init__()
         self.tok_emb = nn.Embedding(emb_num, emb_dim)
+        if trainable_pos_embeddings:
+            self.pos_emb = nn.Embedding(block_size, emb_dim)
         self.block_size = block_size
         self.emb_num = emb_num
         self.emb_dim = emb_dim
@@ -87,8 +96,11 @@ class Transformer(nn.Module):
     def forward(self, x, mask=None):
         x = self.tok_emb(x)
         _, l, emb_dim = x.shape
-        pos = torch.tensor([i for i in range(l)])
-        pos_emb = get_timestep_embedding(pos, emb_dim)
+        pos = torch.arange(0, l, dtype=torch.long, device=x.device)
+        if hasattr(self, 'pos_emb'):
+            pos_emb = self.pos_emb(pos.unsqueeze(0))
+        else:
+            pos_emb = get_timestep_embedding(pos, emb_dim)
         if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
         x = x + pos_emb
         x = self.drop(x)

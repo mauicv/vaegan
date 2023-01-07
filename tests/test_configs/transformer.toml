@@ -4,6 +4,7 @@ n_heads = 8
 emb_dim = 256
 emb_num = 10
 depth = 5
+block_size=128
 
 [[transformer.opt_cfgs]]
 class='Adam'
