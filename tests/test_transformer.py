@@ -1,6 +1,7 @@
 import pytest
 import torch
-from duct.model.transformer.model import Transformer, sample
+from duct.model.transformer.model import Transformer
+from duct.model.transformer.samplers import sample_sequential
 from duct.model.transformer.block import TransformerBlock, AttnBlock
 from duct.model.transformer.mask import get_local_image_mask, get_causal_mask
 
@@ -67,11 +68,11 @@ def test_transformer_aud_mask(n_heads, trainable_pos_embeddings):
 def test_sample_trasnformer():
     transformer = Transformer(n_heads=1, emb_dim=256, emb_num=10, depth=5, block_size=8*8)
     x = torch.randint(0, 10, (8, ))
-    _, mask = get_local_image_mask((8,8), (4, 4))
-    y = sample(transformer, x, sample=False, mask=mask, top_k=5)
+    _, mask = get_local_image_mask((8, 8), (4, 4))
+    y = sample_sequential(transformer, x, sample=False, mask=mask, top_k=5)
     assert torch.all(y[:x.shape[0]] == x)
     assert torch.any(y[x.shape[0]:] > 0)
-    y = sample(transformer, x, sample=True, mask=mask, top_k=None)
+    y = sample_sequential(transformer, x, sample=True, mask=mask, top_k=None)
     assert torch.all(y[:x.shape[0]] == x)
     assert torch.any(y[x.shape[0]:] > 0)
 

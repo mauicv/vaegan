@@ -9,7 +9,7 @@ def get_causal_mask(l):
 
 def get_local_image_mask(image_size=(32, 32), patch_size=(6, 6)):
     h, w = image_size
-    mask = torch.zeros((h, w, h, w))
+    mask = torch.zeros((h, w, h, w))    
     patch_w, patch_h = patch_size
     for i in range(h):
         for j in range(w):
