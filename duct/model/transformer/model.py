@@ -90,8 +90,11 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         self.depth = depth
         self.n_heads = n_heads
 
-        self.tok_emb = nn.Embedding(num_scales*emb_num, emb_dim)
-        self.pos_emb = nn.Embedding(num_scales*block_size, emb_dim)
+        self.tok_emb = nn.Embedding(emb_num, emb_dim)
+        self.pos_emb = nn.Embedding(block_size, emb_dim)
+        self.ind_emb = nn.Embedding(emb_num, emb_dim)
+        self.scale_emb = nn.Embedding(num_scales, emb_dim)
+
         self.layers = nn.ModuleList()
         for _ in range(depth):
             transformer_block = TransformerBlock(
@@ -104,19 +107,30 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         self.apply(self._init_weights)
 
     def _preprocess_input(self, x):
-        _, l, s = x.shape
-        for scale in range(self.num_scales):
-            x[:, scale, :] = x[:, scale, :] + scale*self.emb_num
-        return x.reshape(-1, l*s)
+        b, l, s, t = x.shape
+        return x.reshape(b, l*s, t)
 
-    def forward(self, x):
+    def forward(self, x, inds):
         _, s, l = x.shape
-        x = self._preprocess_input(x)
+        assert len(inds) == s
         x = self.tok_emb(x)
-        pos = torch.arange(0, s*l, dtype=torch.long, device=x.device)
-        pos_emb = self.pos_emb(pos.unsqueeze(0))
+
+        pos = torch.arange(0, l, dtype=torch.long, device=x.device)
+        pos_emb = self.pos_emb(pos)
         if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
-        x = x + pos_emb
+
+        scale = torch.arange(0, s, dtype=torch.long, device=x.device)
+        scale_emb = self.scale_emb(scale)
+        if next(self.parameters()).is_cuda: scale_emb = scale_emb.cuda()
+
+        ind_emb = self.ind_emb(inds)
+        if next(self.parameters()).is_cuda: ind_emb = ind_emb.cuda()
+
+        x = x + pos_emb[None, None, :, :] \
+            + scale_emb[None, :, None, :] \
+            + ind_emb[None, :, None, :]
+        
+        x = self._preprocess_input(x)
         x = self.drop(x)
 
         for layer in self.layers:
@@ -126,6 +140,4 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         return self._postprocess_input(logits)
 
     def _postprocess_input(self, x):
-        for scale in range(self.num_scales):
-            x[:, scale, :] = x[:, scale, :] - scale*self.emb_num
         return x.reshape(-1, self.num_scales, self.block_size, self.emb_num)
