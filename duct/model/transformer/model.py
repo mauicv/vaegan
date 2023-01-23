@@ -92,7 +92,7 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
 
         self.tok_emb = nn.Embedding(emb_num, emb_dim)
         self.pos_emb = nn.Embedding(block_size, emb_dim)
-        self.ind_emb = nn.Embedding(emb_num, emb_dim)
+        self.ind_emb = nn.Embedding(num_scales, emb_dim)
         self.scale_emb = nn.Embedding(num_scales, emb_dim)
 
         self.layers = nn.ModuleList()
