@@ -1,8 +1,6 @@
 import pytest
 import torch
 from duct.model.transformer.model import MultiScaleTransformer
-from duct.model.transformer.samplers import sample_sequential
-from duct.model.transformer.mask import get_local_image_mask, get_causal_mask
 
 
 @pytest.mark.parametrize("n_heads", [4])
