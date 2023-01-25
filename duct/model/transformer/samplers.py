@@ -105,11 +105,16 @@ class HierarchySampler:
 
     def generate_random_xs(self, batch_size=1):
         xs = []
+        if next(self.model.parameters()).is_cuda: 
+            device = 'cuda'
+        else:
+            device = 'cpu'
         for i in range(self.model.num_scales):
             xs.append(torch.randint(
                 0, self.model.emb_num, 
                 (batch_size, self.data_shapes[i]), 
-                dtype=torch.long
+                dtype=torch.long,
+                device=device
             ))
         return xs
 
@@ -129,7 +134,7 @@ class HierarchySampler:
 
         if sample:
             probs = probs.cumsum(-1)
-            rns = torch.rand(b, s, l, 1)
+            rns = torch.rand(b, s, l, 1, device=xs[0].device)
             x = torch.searchsorted(probs, rns)
             x = x.squeeze(-1)
         else:
