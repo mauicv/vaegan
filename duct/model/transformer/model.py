@@ -93,7 +93,10 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
 
         _, self.mask_inds = resolution_mask(num_scales, block_size)
 
-        self.tok_emb = nn.Embedding(emb_num, emb_dim)
+        self.tok_embs = nn.ModuleList()
+        for _ in range(num_scales):
+            self.tok_embs.append(nn.Embedding(emb_num, emb_dim))
+
         self.pos_emb = nn.Embedding(block_size, emb_dim)
         self.ind_emb = nn.Embedding(num_scales, emb_dim)
         self.scale_emb = nn.Embedding(num_scales, emb_dim)
@@ -116,7 +119,11 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
     def forward(self, x, inds):
         _, s, l = x.shape
         assert len(inds) == s
-        x = self.tok_emb(x)
+
+        x_scales = torch.split(x, 1, dim=1)
+        x_scales = tuple(tok_emb(x_s) for tok_emb, x_s
+                         in zip(self.tok_embs, x_scales))
+        x = torch.cat(x_scales, dim=1)
 
         pos = torch.arange(0, l, dtype=torch.long, device=x.device)
         pos_emb = self.pos_emb(pos)
