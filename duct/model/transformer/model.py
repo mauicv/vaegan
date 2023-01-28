@@ -80,7 +80,8 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
             block_size, 
             num_scales,
             n_heads=1, 
-            depth=5, 
+            depth=5,
+            factor=4,
         ):
         super().__init__()
         BaseTransformer.__init__(self)
@@ -90,15 +91,17 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         self.emb_dim = emb_dim
         self.depth = depth
         self.n_heads = n_heads
+        self.factor = factor
 
         _, self.mask_inds = resolution_mask(num_scales, block_size)
 
         self.tok_embs = nn.ModuleList()
-        for _ in range(num_scales):
+        self.pos_embs = nn.ModuleList()
+        for scale in range(num_scales):
             self.tok_embs.append(nn.Embedding(emb_num, emb_dim))
+            self.pos_embs.append(nn.Embedding(block_size*(self.factor**scale), emb_dim))
 
         self.pos_emb = nn.Embedding(block_size, emb_dim)
-        self.ind_emb = nn.Embedding(num_scales, emb_dim)
         self.scale_emb = nn.Embedding(num_scales, emb_dim)
 
         self.layers = nn.ModuleList()
@@ -121,25 +124,25 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         assert len(inds) == s
 
         x_scales = torch.split(x, 1, dim=1)
-        x_scales = tuple(tok_emb(x_s) for tok_emb, x_s
+        tok_scales = tuple(tok_emb(x_s) for tok_emb, x_s
                          in zip(self.tok_embs, x_scales))
-        x = torch.cat(x_scales, dim=1)
+        tok_emb = torch.cat(tok_scales, dim=1)
 
-        pos = torch.arange(0, l, dtype=torch.long, device=x.device)
-        pos_emb = self.pos_emb(pos)
+        pos_embs = []
+        for ind, pos_emb in enumerate(self.pos_embs):
+            pos = torch.arange(ind, ind + l, dtype=torch.long, device=x.device)
+            pos_embs.append(pos_emb(pos.unsqueeze(0)))
+        pos_emb = torch.cat(pos_embs, dim=0)
         if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
 
         scale = torch.arange(0, s, dtype=torch.long, device=x.device)
         scale_emb = self.scale_emb(scale)
         if next(self.parameters()).is_cuda: scale_emb = scale_emb.cuda()
 
-        ind_emb = self.ind_emb(inds)
-        if next(self.parameters()).is_cuda: ind_emb = ind_emb.cuda()
+        x = tok_emb + pos_emb[None, None, :, :] \
+            + scale_emb[None, :, None, :]
 
-        x = x + pos_emb[None, None, :, :] \
-            + scale_emb[None, :, None, :] \
-            + ind_emb[None, :, None, :]
-        
+        x = x.squeeze(0)
         x = self._preprocess_input(x)
         x = self.drop(x)
 

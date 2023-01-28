@@ -19,6 +19,12 @@ def test_ms_transformer_forward(n_heads):
         num_scales=4,
         block_size=128)
     x = torch.randint(0, 10, (64, 4, 128))
-    inds = torch.randint(0, 4, (4, ))
+    token_counts = [128, 512, 2048, 8192]
+    inds = torch.cat([
+        torch.randint(0, count, (1, ))
+        for count in token_counts
+    ])
+    for ind, pos_emb in enumerate(transformer.pos_embs):
+        assert pos_emb.weight.shape[0] == token_counts[ind]
     y = transformer(x, inds=inds)
     assert y.shape == (64, 4, 128, 10)
