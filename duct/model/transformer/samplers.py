@@ -93,6 +93,8 @@ class HierarchySampler:
 
     def sub_sample(self, xs):
         inds, seq_inds = self.sample_inds()
+        inds = inds.to(xs[0].device)
+        seq_inds = seq_inds.to(xs[0].device)
         tok_seqs = torch.zeros(
             xs[0].shape[0], len(xs), 
             self.model.block_size, 

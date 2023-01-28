@@ -1,6 +1,12 @@
 import pytest
 import torch
 from duct.model.transformer.model import MultiScaleTransformer
+from duct.model.transformer.mask import resolution_mask
+
+
+def test_resolution_mask():
+    mask, _ = resolution_mask(4, 128)
+    assert mask.shape == (4*128, 4*128)
 
 
 @pytest.mark.parametrize("n_heads", [4])
