@@ -1,6 +1,13 @@
 import torch
 
 
+def scaled_cumsum(inds, scale=4, width=64):
+    new_vals = inds.clone()
+    for i in range(1, len(inds)):
+        new_vals[i] = scale * new_vals[i-1] + inds[i] * width
+    return new_vals
+
+
 def test_to_seq():
     print()
     tok_seqs = torch.zeros(24, 4, 64)
@@ -21,10 +28,3 @@ def test_to_seq():
             tok_seqs[:, i] = tok_seq
 
     print(tok_seqs.shape)
-
-
-def scaled_cumsum(inds, scale=4, width=64):
-    new_vals = inds.clone()
-    for i in range(1, len(inds)):
-        new_vals[i] = scale * new_vals[i-1] + inds[i] * width
-    return new_vals

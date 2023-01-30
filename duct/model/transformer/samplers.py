@@ -80,20 +80,15 @@ class HierarchySampler:
             res_seq_len = self.model.block_size * (self.scale ** i)
             self.data_shapes.append(res_seq_len)
 
-    def sample_inds(self):
-        inds = torch.randint(0, self.scale, (self.model.num_scales, ))
-        inds[0] = 0
-        return inds, self.scaled_cumsum(inds)
-
-    def scaled_cumsum(self, inds):
-        new_vals = inds.clone()
-        for i in range(1, len(inds)):
-            new_vals[i] = self.scale * new_vals[i-1] + inds[i] * self.model.block_size
-        return new_vals
+    def sample_inds(self, batch_size=1):
+        inds = [torch.zeros((batch_size, ))]
+        for _ in range(1, self.model.num_scales):
+            rnd = torch.randint(0, (self.scale - 1) * self.model.block_size, (batch_size, ))
+            inds.append(inds[-1] * self.scale + rnd)
+        return torch.tensor(inds)
 
     def sub_sample(self, xs):
-        inds, seq_inds = self.sample_inds()
-        inds = inds.to(xs[0].device)
+        seq_inds = self.sample_inds()
         seq_inds = seq_inds.to(xs[0].device)
         tok_seqs = torch.zeros(
             xs[0].shape[0], len(xs), 
@@ -102,8 +97,9 @@ class HierarchySampler:
             device=xs[0].device
         )
         for i, ind in enumerate(seq_inds):
+            ind = int(ind.item())
             tok_seqs[:, i] = xs[i][:, ind:ind+self.model.block_size]
-        return inds, seq_inds, tok_seqs
+        return seq_inds, tok_seqs
 
     def generate_random_xs(self, batch_size=1):
         xs = []
@@ -125,8 +121,8 @@ class HierarchySampler:
         assert top_k <= self.model.emb_num, \
             f"top_k must be less than number of embeddings, {self.model.emb_num}"
         self.model.eval()
-        inds, seq_inds, tok_seq = self.sub_sample(xs)
-        logits = self.model(tok_seq, inds)
+        seq_inds, tok_seq = self.sub_sample(xs)
+        logits = self.model(tok_seq, seq_inds)
         logits = logits / temperature
 
         if top_k is not None:
@@ -143,6 +139,7 @@ class HierarchySampler:
             _, x = torch.topk(probs, k=1, dim=-1)
             x = x.squeeze(-1)
         for i, ind in enumerate(seq_inds):
+            ind = int(ind.item())
             xs[i][:, ind:ind+self.model.block_size] = x[:, i, :]
         
         return xs

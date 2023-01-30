@@ -42,13 +42,10 @@ def test_hierarchy_sampler_sample_inds():
         scale=4
     )
     assert sampler.data_shapes == [128, 512, 2048, 8192]
-    inds, scaled_inds = sampler.sample_inds()
-    c = 0
-
-    for j, a, b in zip(inds.numpy(), scaled_inds.numpy(), sampler.data_shapes):
-        assert int((a - c)/128) == j
-        c = 4*a
-        assert a <= b
+    inds = sampler.sample_inds()
+    assert inds.shape == (4, )
+    for i, ub in zip(inds, sampler.data_shapes):
+        assert 0 <= i <= ub - 128
 
 
 def test_hierarchy_sampler_sub_sample():
@@ -71,7 +68,7 @@ def test_hierarchy_sampler_sub_sample():
         torch.ones((24, 2048)),
         torch.ones((24, 8192)),
     ]
-    inds, _, encs = sampler.sub_sample(x)
+    inds, encs = sampler.sub_sample(x)
     assert inds.shape == (4, )
     assert encs.shape == (24, 4, 128)
     assert torch.all(encs == 1)
