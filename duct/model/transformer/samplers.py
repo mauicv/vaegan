@@ -106,7 +106,7 @@ class HierarchySampler:
             device=xs[0].device
         )
         for i, ind in enumerate(seq_inds.permute(1, 0)):
-            ind_range = torch.arange(0, self.model.block_size)
+            ind_range = torch.arange(0, self.model.block_size, device=ind.device)
             ind_ranges = ind[:, None] + ind_range[None, :]
             tok_seqs[:, i] = xs[i].gather(1, ind_ranges)
         return seq_inds, tok_seqs
@@ -149,7 +149,7 @@ class HierarchySampler:
             _, x = torch.topk(probs, k=1, dim=-1)
             x = x.squeeze(-1)
         for i, ind in enumerate(seq_inds.permute(1, 0)):
-            ind_range = torch.arange(0, self.model.block_size)
+            ind_range = torch.arange(0, self.model.block_size, device=ind.device)
             xs[i].scatter_(1, ind[:, None] + ind_range[None, :], x[:, i, :])
 
         return xs
