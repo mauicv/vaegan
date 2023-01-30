@@ -84,18 +84,20 @@ class HierarchySampler:
             self.data_shapes.append(res_seq_len)
 
     def sample_inds(self, batch_size=1):
-        inds = [torch.zeros((batch_size, ))]
+        inds = [torch.zeros((batch_size, 1), dtype=torch.long)]
         for _ in range(1, self.model.num_scales):
             rnd = torch.randint(
                 0, 
                 (self.model.factor - 1) * self.model.block_size, 
-                (batch_size, )
+                (batch_size, 1)
             )
-            inds.append(inds[-1] * self.model.factor + rnd)
-        return torch.tensor(inds)
+            batch_inds = (inds[-1] * self.model.factor + rnd)
+            batch_inds = batch_inds.long()
+            inds.append(batch_inds)
+        return torch.cat(inds, dim=1)
 
-    def sub_sample(self, xs):
-        seq_inds = self.sample_inds()
+    def sub_sample(self, xs, batch_size=1):
+        seq_inds = self.sample_inds(batch_size=batch_size)
         seq_inds = seq_inds.to(xs[0].device)
         tok_seqs = torch.zeros(
             xs[0].shape[0], len(xs), 
@@ -103,9 +105,10 @@ class HierarchySampler:
             dtype=torch.long, 
             device=xs[0].device
         )
-        for i, ind in enumerate(seq_inds):
-            ind = int(ind.item())
-            tok_seqs[:, i] = xs[i][:, ind:ind+self.model.block_size]
+        for i, ind in enumerate(seq_inds.permute(1, 0)):
+            ind_range = torch.arange(0, self.model.block_size)
+            ind_ranges = ind[:, None] + ind_range[None, :]
+            tok_seqs[:, i] = xs[i].gather(1, ind_ranges)
         return seq_inds, tok_seqs
 
     def generate_random_xs(self, batch_size=1):
@@ -145,10 +148,10 @@ class HierarchySampler:
         else:
             _, x = torch.topk(probs, k=1, dim=-1)
             x = x.squeeze(-1)
-        for i, ind in enumerate(seq_inds):
-            ind = int(ind.item())
-            xs[i][:, ind:ind+self.model.block_size] = x[:, i, :]
-        
+        for i, ind in enumerate(seq_inds.permute(1, 0)):
+            ind_range = torch.arange(0, self.model.block_size)
+            xs[i].scatter_(1, ind[:, None] + ind_range[None, :], x[:, i, :])
+
         return xs
 
     @torch.no_grad()

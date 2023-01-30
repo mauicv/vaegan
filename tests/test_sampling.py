@@ -1,4 +1,5 @@
 import torch
+import pytest
 from duct.model.transformer.model import Transformer, MultiScaleTransformer
 from duct.model.transformer.samplers import sample_sequential, sample_step, HierarchySampler
 from duct.model.transformer.mask import get_local_image_mask
@@ -28,7 +29,8 @@ def test_sample_step():
         verbose=False
     )
 
-def test_hierarchy_sampler_sample_inds():
+@pytest.mark.parametrize('batch_size', [1, 16])
+def test_hierarchy_sampler_sample_inds(batch_size):
     transformer = MultiScaleTransformer(
         n_heads=4, 
         emb_dim=256, 
@@ -39,13 +41,15 @@ def test_hierarchy_sampler_sample_inds():
     )
     sampler = HierarchySampler(transformer)
     assert sampler.data_shapes == [128, 512, 2048, 8192]
-    inds = sampler.sample_inds()
-    assert inds.shape == (4, )
-    for i, ub in zip(inds, sampler.data_shapes):
-        assert 0 <= i <= ub - 128
+    inds = sampler.sample_inds(batch_size=batch_size)
+    assert inds.shape == (batch_size, 4)
+    for i, ub in zip(inds.permute(1, 0), sampler.data_shapes):
+        assert torch.all(0 <= i)
+        assert torch.all(i <= ub - 128)
 
 
-def test_hierarchy_sampler_sub_sample():
+@pytest.mark.parametrize('batch_size', [1, 16])
+def test_hierarchy_sampler_sub_sample(batch_size):
     transformer = MultiScaleTransformer(
         n_heads=4, 
         emb_dim=256, 
@@ -57,14 +61,14 @@ def test_hierarchy_sampler_sub_sample():
     sampler = HierarchySampler(transformer)
     assert sampler.data_shapes == [128, 512, 2048, 8192]
     x = [
-        torch.ones((24, 128)),
-        torch.ones((24, 512)),
-        torch.ones((24, 2048)),
-        torch.ones((24, 8192)),
+        torch.ones((batch_size, 128)),
+        torch.ones((batch_size, 512)),
+        torch.ones((batch_size, 2048)),
+        torch.ones((batch_size, 8192)),
     ]
-    inds, encs = sampler.sub_sample(x)
-    assert inds.shape == (4, )
-    assert encs.shape == (24, 4, 128)
+    inds, encs = sampler.sub_sample(x, batch_size=batch_size)
+    assert inds.shape == (batch_size, 4)
+    assert encs.shape == (batch_size, 4, 128)
     assert torch.all(encs == 1)
 
 
