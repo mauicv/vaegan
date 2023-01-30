@@ -1,6 +1,7 @@
 import torch
 from torch.nn import functional as F
 from tqdm import tqdm
+from duct.model.transformer.model import MultiScaleTransformer
 
 
 def top_k_logits(logits, k):
@@ -72,19 +73,25 @@ def sample_step(
 
 
 class HierarchySampler:
-    def __init__(self, model, scale):
+    def __init__(self, model):
+        assert isinstance(model, MultiScaleTransformer), \
+            "model must be an instance of MultiScaleTransformer"
+
         self.model = model
-        self.scale = scale
         self.data_shapes = []
         for i in range(self.model.num_scales):
-            res_seq_len = self.model.block_size * (self.scale ** i)
+            res_seq_len = self.model.block_size * (self.model.factor ** i)
             self.data_shapes.append(res_seq_len)
 
     def sample_inds(self, batch_size=1):
         inds = [torch.zeros((batch_size, ))]
         for _ in range(1, self.model.num_scales):
-            rnd = torch.randint(0, (self.scale - 1) * self.model.block_size, (batch_size, ))
-            inds.append(inds[-1] * self.scale + rnd)
+            rnd = torch.randint(
+                0, 
+                (self.model.factor - 1) * self.model.block_size, 
+                (batch_size, )
+            )
+            inds.append(inds[-1] * self.model.factor + rnd)
         return torch.tensor(inds)
 
     def sub_sample(self, xs):

@@ -37,10 +37,7 @@ def test_hierarchy_sampler_sample_inds():
         num_scales=4,
         block_size=128
     )
-    sampler = HierarchySampler(
-        transformer,
-        scale=4
-    )
+    sampler = HierarchySampler(transformer)
     assert sampler.data_shapes == [128, 512, 2048, 8192]
     inds = sampler.sample_inds()
     assert inds.shape == (4, )
@@ -57,10 +54,7 @@ def test_hierarchy_sampler_sub_sample():
         num_scales=4,
         block_size=128
     )
-    sampler = HierarchySampler(
-        transformer,
-        scale=4
-    )
+    sampler = HierarchySampler(transformer)
     assert sampler.data_shapes == [128, 512, 2048, 8192]
     x = [
         torch.ones((24, 128)),
@@ -83,10 +77,7 @@ def test_hierarchy_sampler_random_xs():
         num_scales=4,
         block_size=128
     )
-    sampler = HierarchySampler(
-        transformer,
-        scale=4
-    )
+    sampler = HierarchySampler(transformer)
     xs = sampler.generate_random_xs()
     for x, s in zip(xs, sampler.data_shapes):
         assert x.shape == (1, s)
@@ -101,10 +92,7 @@ def test_hierarchy_sampler__sample():
         num_scales=4,
         block_size=128
     )
-    sampler = HierarchySampler(
-        transformer,
-        scale=4
-    )
+    sampler = HierarchySampler(transformer)
     xs = sampler.generate_random_xs()
     shapes_1 = [x.shape for x in xs]
     xs = sampler.simple_sample(xs, top_k=5, iterations=2, sample=True)
