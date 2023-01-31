@@ -5,6 +5,24 @@ from duct.model.transformer.samplers import sample_sequential, sample_step, Hier
 from duct.model.transformer.mask import get_local_image_mask
 
 
+def generate_xs(emb_num=10, batch_size=10, device='cpu'):
+    xs = []
+    data_shapes = [
+        (8, 8), 
+        (16, 16), 
+        (32, 32), 
+        (64, 64)
+    ]
+    for data_shape in data_shapes:
+        xs.append(torch.randint(
+            0, emb_num, 
+            (batch_size, *data_shape),
+            dtype=torch.long,
+            device=device
+        ))
+    return xs
+
+
 def test_sample_sequential():
     transformer = Transformer(n_heads=1, emb_dim=256, emb_num=10, depth=5, block_size=8*8)
     x = torch.randint(0, 10, (8, ))
@@ -29,26 +47,8 @@ def test_sample_step():
         verbose=False
     )
 
-@pytest.mark.parametrize('batch_size', [1, 16])
-def test_hierarchy_sampler_sample_inds(batch_size):
-    transformer = MultiScaleTransformer(
-        n_heads=4, 
-        emb_dim=256, 
-        emb_num=10, 
-        depth=5, 
-        num_scales=4,
-        block_size=128
-    )
-    sampler = HierarchySampler(transformer)
-    assert sampler.data_shapes == [128, 512, 2048, 8192]
-    inds = sampler.sample_inds(batch_size=batch_size)
-    assert inds.shape == (batch_size, 4)
-    for i, ub in zip(inds.permute(1, 0), sampler.data_shapes):
-        assert torch.all(0 <= i)
-        assert torch.all(i <= ub - 128)
 
-
-@pytest.mark.parametrize('batch_size', [1, 16])
+@pytest.mark.parametrize('batch_size', [1, 4])
 def test_hierarchy_sampler_sub_sample(batch_size):
     transformer = MultiScaleTransformer(
         n_heads=4, 
@@ -56,35 +56,13 @@ def test_hierarchy_sampler_sub_sample(batch_size):
         emb_num=10, 
         depth=5, 
         num_scales=4,
-        block_size=128
+        block_size=64
     )
     sampler = HierarchySampler(transformer)
-    assert sampler.data_shapes == [128, 512, 2048, 8192]
-    x = [
-        torch.ones((batch_size, 128)),
-        torch.ones((batch_size, 512)),
-        torch.ones((batch_size, 2048)),
-        torch.ones((batch_size, 8192)),
-    ]
-    inds, encs = sampler.sub_sample(x, batch_size=batch_size)
-    assert inds.shape == (batch_size, 4)
-    assert encs.shape == (batch_size, 4, 128)
-    assert torch.all(encs == 1)
-
-
-def test_hierarchy_sampler_random_xs():
-    transformer = MultiScaleTransformer(
-        n_heads=4, 
-        emb_dim=256, 
-        emb_num=10, 
-        depth=5, 
-        num_scales=4,
-        block_size=128
-    )
-    sampler = HierarchySampler(transformer)
-    xs = sampler.generate_random_xs()
-    for x, s in zip(xs, sampler.data_shapes):
-        assert x.shape == (1, s)
+    xs = generate_xs(batch_size=batch_size)
+    inds, encs = sampler.sub_sample(xs, batch_size=batch_size)
+    assert inds.shape == (batch_size, 4, 64)
+    assert encs.shape == (batch_size, 4, 64)
 
 
 def test_hierarchy_sampler__sample():
@@ -94,10 +72,11 @@ def test_hierarchy_sampler__sample():
         emb_num=10, 
         depth=5, 
         num_scales=4,
-        block_size=128
+        block_size=64
     )
     sampler = HierarchySampler(transformer)
-    xs = sampler.generate_random_xs()
+
+    xs = generate_xs(batch_size=1)
     shapes_1 = [x.shape for x in xs]
     xs = sampler.simple_sample(xs, top_k=5, iterations=2, sample=True)
     shapes_2 = [x.shape for x in xs]

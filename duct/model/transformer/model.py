@@ -129,16 +129,16 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         tok_emb = torch.cat(tok_scales, dim=1)
 
         pos_embs = []
-        for ind, pos_emb in zip(inds.permute(1, 0), self.pos_embs):
-            pos_embs.append(pos_emb(ind.unsqueeze(0)))
-        pos_emb = torch.cat(pos_embs, dim=0).permute(1, 0, 2)
+        for ind, pos_emb in zip(inds.permute(1, 0, 2), self.pos_embs):
+            pos_embs.append(pos_emb(ind).unsqueeze(1))
+        pos_emb = torch.cat(pos_embs, dim=1)
         if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
 
         scale = torch.arange(0, s, dtype=torch.long, device=x.device)
         scale_emb = self.scale_emb(scale)
         if next(self.parameters()).is_cuda: scale_emb = scale_emb.cuda()
 
-        x = tok_emb + pos_emb[:, :, None, :] \
+        x = tok_emb + pos_emb \
             + scale_emb[None, :, None, :]
 
         x = self._preprocess_input(x)

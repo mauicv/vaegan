@@ -74,57 +74,39 @@ def sample_step(
 
 class HierarchySampler:
     def __init__(self, model):
-        assert isinstance(model, MultiScaleTransformer), \
-            "model must be an instance of MultiScaleTransformer"
-
         self.model = model
-        self.data_shapes = []
-        for i in range(self.model.num_scales):
-            res_seq_len = self.model.block_size * (self.model.factor ** i)
-            self.data_shapes.append(res_seq_len)
 
-    def sample_inds(self, batch_size=1):
-        inds = [torch.zeros((batch_size, 1), dtype=torch.long)]
-        for _ in range(1, self.model.num_scales):
-            rnd = torch.randint(
-                0, 
-                (self.model.factor - 1) * self.model.block_size, 
-                (batch_size, 1)
-            )
-            batch_inds = (inds[-1] * self.model.factor + rnd)
-            batch_inds = batch_inds.long()
-            inds.append(batch_inds)
-        return torch.cat(inds, dim=1)
+    def make_grid_inds(self, w, h):
+        add = ((i, j) for i in range(0, int(w)) for j in range(0, int(h)))
+        return torch.tensor(list(add)).reshape(w, h, 2)
 
     def sub_sample(self, xs, batch_size=1):
-        seq_inds = self.sample_inds(batch_size=batch_size)
-        seq_inds = seq_inds.to(xs[0].device)
+        b, w, h = xs[0].shape
+        add = self.make_grid_inds(w, h).to(xs[0].device)
+        inds = []
+        for i in range(0, self.model.num_scales):
+            if i == 0:
+                ind = torch.zeros((batch_size, 2), dtype=torch.long, device=xs[0].device)
+            else:
+                rnd = torch.randint(0, int(w), (batch_size, 2), device=xs[0].device)
+                ind = last_inds * 2 + rnd
+            last_inds = ind
+            ind = ind[:, None, None] + add[None, :]
+            offset_mult = torch.tensor([1, w*(2**i)]).to(xs[0].device)
+            ind = (ind.reshape(b, -1, 2) * offset_mult).sum(-1)
+            inds.append(ind[:, None, :])
+
+        xs = [x.reshape(b, -1) for x in xs]
+        seq_inds = torch.cat(inds, dim=1).to(xs[0].device)
         tok_seqs = torch.zeros(
-            xs[0].shape[0], len(xs), 
+            b, len(xs),
             self.model.block_size, 
             dtype=torch.long, 
             device=xs[0].device
         )
-        for i, ind in enumerate(seq_inds.permute(1, 0)):
-            ind_range = torch.arange(0, self.model.block_size, device=ind.device)
-            ind_ranges = ind[:, None] + ind_range[None, :]
-            tok_seqs[:, i] = xs[i].gather(1, ind_ranges)
+        for i, ind in enumerate(seq_inds.permute(1, 0, 2)):
+            tok_seqs[:, i] = xs[i].gather(1, ind)
         return seq_inds, tok_seqs
-
-    def generate_random_xs(self, batch_size=1):
-        xs = []
-        if next(self.model.parameters()).is_cuda: 
-            device = 'cuda'
-        else:
-            device = 'cpu'
-        for i in range(self.model.num_scales):
-            xs.append(torch.randint(
-                0, self.model.emb_num, 
-                (batch_size, self.data_shapes[i]), 
-                dtype=torch.long,
-                device=device
-            ))
-        return xs
 
     @torch.no_grad()
     def _sample(self, xs, top_k=50, temperature=0.1, sample=True):
@@ -132,6 +114,7 @@ class HierarchySampler:
             f"top_k must be less than number of embeddings, {self.model.emb_num}"
         self.model.eval()
         seq_inds, tok_seq = self.sub_sample(xs)
+        # print([s.shape for s in seq_inds], [t.shape for t in tok_seq])
         logits = self.model(tok_seq, seq_inds)
         logits = logits / temperature
 
@@ -148,9 +131,15 @@ class HierarchySampler:
         else:
             _, x = torch.topk(probs, k=1, dim=-1)
             x = x.squeeze(-1)
-        for i, ind in enumerate(seq_inds.permute(1, 0)):
+        
+        # TODO: fix the scatter function to work with the reshaped seq_inds
+        print()
+        print(seq_inds.shape, x.shape)
+        print()
+        for i, ind in enumerate(seq_inds.permute(1, 0, 2)):
             ind_range = torch.arange(0, self.model.block_size, device=ind.device)
-            xs[i].scatter_(1, ind[:, None] + ind_range[None, :], x[:, i, :])
+            print(xs[i].shape, ind.shape, ind_range.shape, x[:, i, :].shape)
+        #     xs[i].scatter_(1, ind[:, None] + ind_range[None, :], x[:, i, :])
 
         return xs
 
