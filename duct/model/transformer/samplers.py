@@ -109,13 +109,12 @@ class HierarchySampler:
         return seq_inds, tok_seqs
 
     @torch.no_grad()
-    def _sample(self, xs, top_k=50, temperature=0.1, sample=True):
+    def _sample(self, xs, top_k=50, temperature=0.1, sample=True, layers=None):
         assert xs[0].shape[0] == 1, "batch size must be 1"
         assert top_k <= self.model.emb_num, \
             f"top_k must be less than number of embeddings, {self.model.emb_num}"
         self.model.eval()
         seq_inds, tok_seq = self.sub_sample(xs)
-        # print([s.shape for s in seq_inds], [t.shape for t in tok_seq])
         logits = self.model(tok_seq, seq_inds)
         logits = logits / temperature
 
@@ -134,11 +133,12 @@ class HierarchySampler:
             x = x.squeeze(-1)
         
         seqs = []
-        for x_res, ind, toks in zip(xs, seq_inds[0], tok_seq[0]):
+        for layer, (x_res, ind, toks) in enumerate(zip(xs, seq_inds[0], tok_seq[0])):
             x_res = x_res[0]
             h, w = x_res.shape
             x_res = x_res.reshape(-1)
-            x_res.scatter_(0, ind, toks)
+            if layer in layers:
+                x_res.scatter_(0, ind, toks)
             seqs.append(x_res.reshape(1, h, w))
 
         return seqs
@@ -151,9 +151,15 @@ class HierarchySampler:
             iterations=10, 
             temperature=0.1, 
             sample=True, 
-            verbose=False
+            verbose=False,
+            layers=None
         ):
         self.model.eval()
+        if layers is None:
+            layers = set(range(self.model.num_scales))
+        elif isinstance(layers, list):
+            layers = set(layers)
+
         for _ in tqdm(range(iterations), disable=not verbose):
-            xs = self._sample(xs, top_k, temperature, sample)
+            xs = self._sample(xs, top_k, temperature, sample, layers=layers)
         return xs

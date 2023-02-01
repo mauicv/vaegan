@@ -65,7 +65,8 @@ def test_hierarchy_sampler_sub_sample(batch_size):
     assert encs.shape == (batch_size, 4, 64)
 
 
-def test_hierarchy_sampler__sample():
+@pytest.mark.parametrize('layers', [[0], [0, 1], [0, 1, 2], [0, 1, 2, 3]])
+def test_hierarchy_sampler__sample(layers):
     transformer = MultiScaleTransformer(
         n_heads=4, 
         emb_dim=256, 
@@ -78,6 +79,12 @@ def test_hierarchy_sampler__sample():
 
     xs = generate_xs(batch_size=1)
     shapes_1 = [x.shape for x in xs]
-    xs = sampler.simple_sample(xs, top_k=5, iterations=2, sample=True)
+    xs = sampler.simple_sample(
+        xs, 
+        top_k=5, 
+        iterations=2, 
+        sample=True, 
+        layers=layers
+    )
     shapes_2 = [x.shape for x in xs]
     assert shapes_1 == shapes_2
