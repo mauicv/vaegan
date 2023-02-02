@@ -80,7 +80,7 @@ class HierarchySampler:
         add = ((i, j) for i in range(0, int(w)) for j in range(0, int(h)))
         return torch.tensor(list(add)).reshape(w, h, 2)
 
-    def sub_sample(self, xs, batch_size=1):
+    def sub_sample(self, xs):
         b, w, h = xs[0].shape
         add = self.make_grid_inds(w, h).to(xs[0].device)
         inds = []
@@ -108,13 +108,55 @@ class HierarchySampler:
             tok_seqs[:, i] = xs[i].gather(1, ind)
         return seq_inds, tok_seqs
 
+    def random_sub_sample(self, xs):
+        b = xs[0].shape[0]
+        tok_seqs = torch.zeros(
+            b, len(xs),
+            self.model.block_size, 
+            dtype=torch.long, 
+            device=xs[0].device
+        )
+        seq_inds = torch.zeros(
+            b, len(xs),
+            self.model.block_size, 
+            dtype=torch.long, 
+            device=xs[0].device
+        )
+        for i, x in enumerate(xs):
+            b, h, w = x.shape
+            x = x.reshape(b, -1)
+            if i == 0:
+                seq_ind = torch.arange(
+                    0, h*w, 
+                    dtype=torch.long,
+                    device=xs[0].device
+                )[None, :]
+            else:
+                seq_ind = torch.randint(
+                    0, h*w, 
+                    (b, self.model.block_size), 
+                    dtype=torch.long,
+                    device=xs[0].device
+                )
+            tok_seqs[:, i] = x.gather(1, seq_ind)
+            seq_inds[:, i] = seq_ind
+        return seq_inds, tok_seqs
+
+
     @torch.no_grad()
-    def _sample(self, xs, top_k=50, temperature=0.1, sample=True, layers=None):
+    def _sample(
+            self,
+            xs,
+            top_k=50,
+            temperature=0.1,
+            sample=True,
+            layers=None
+        ):
         assert xs[0].shape[0] == 1, "batch size must be 1"
         assert top_k <= self.model.emb_num, \
             f"top_k must be less than number of embeddings, {self.model.emb_num}"
         self.model.eval()
-        seq_inds, tok_seq = self.sub_sample(xs)
+        seq_inds, tok_seq = self.random_sub_sample(xs)
         logits = self.model(tok_seq, seq_inds)
         logits = logits / temperature
 
@@ -133,12 +175,12 @@ class HierarchySampler:
             x = x.squeeze(-1)
         
         seqs = []
-        for layer, (x_res, ind, toks) in enumerate(zip(xs, seq_inds[0], tok_seq[0])):
-            x_res = x_res[0]
-            h, w = x_res.shape
-            x_res = x_res.reshape(-1)
+        for layer, (x_res, ind, toks) in enumerate(zip(xs, seq_inds[0], x[0])):
+            _, h, w = x_res.shape
             if layer in layers:
-                x_res.scatter_(0, ind, toks)
+                x_res = x_res[0]
+                x_res = x_res.reshape(-1)
+                x_res = x_res.scatter(0, ind, toks)
             seqs.append(x_res.reshape(1, h, w))
 
         return seqs
@@ -155,11 +197,6 @@ class HierarchySampler:
             layers=None
         ):
         self.model.eval()
-        if layers is None:
-            layers = set(range(self.model.num_scales))
-        elif isinstance(layers, list):
-            layers = set(layers)
-
         for _ in tqdm(range(iterations), disable=not verbose):
             xs = self._sample(xs, top_k, temperature, sample, layers=layers)
         return xs
