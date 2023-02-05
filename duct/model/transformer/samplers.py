@@ -1,7 +1,8 @@
 import torch
 from torch.nn import functional as F
 from tqdm import tqdm
-from duct.model.transformer.model import MultiScaleTransformer
+# from duct.model.transformer.model import MultiScaleTransformer
+from duct.utils.mask_inds_2d import MaskIndex2D
 
 
 def top_k_logits(logits, k):
@@ -76,72 +77,19 @@ class HierarchySampler:
     def __init__(self, model):
         self.model = model
 
-    def make_grid_inds(self, w, h):
-        add = ((i, j) for i in range(0, int(w)) for j in range(0, int(h)))
-        return torch.tensor(list(add)).reshape(w, h, 2)
-
     def sub_sample(self, xs):
-        b, w, h = xs[0].shape
-        add = self.make_grid_inds(w, h).to(xs[0].device)
-        inds = []
-        for i in range(0, self.model.num_scales):
-            if i == 0:
-                ind = torch.zeros((batch_size, 2), dtype=torch.long, device=xs[0].device)
-            else:
-                rnd = torch.randint(0, int(w), (batch_size, 2), device=xs[0].device)
-                ind = last_inds * 2 + rnd
-            last_inds = ind
-            ind = ind[:, None, None] + add[None, :]
-            offset_mult = torch.tensor([1, w*(2**i)]).to(xs[0].device)
-            ind = (ind.reshape(b, -1, 2) * offset_mult).sum(-1)
-            inds.append(ind[:, None, :])
-
-        xs = [x.reshape(b, -1) for x in xs]
-        seq_inds = torch.cat(inds, dim=1).to(xs[0].device)
-        tok_seqs = torch.zeros(
-            b, len(xs),
-            self.model.block_size, 
-            dtype=torch.long, 
-            device=xs[0].device
-        )
-        for i, ind in enumerate(seq_inds.permute(1, 0, 2)):
-            tok_seqs[:, i] = xs[i].gather(1, ind)
-        return seq_inds, tok_seqs
-
-    def random_sub_sample(self, xs):
-        b = xs[0].shape[0]
-        tok_seqs = torch.zeros(
-            b, len(xs),
-            self.model.block_size, 
-            dtype=torch.long, 
-            device=xs[0].device
-        )
-        seq_inds = torch.zeros(
-            b, len(xs),
-            self.model.block_size, 
-            dtype=torch.long, 
-            device=xs[0].device
-        )
-        for i, x in enumerate(xs):
-            b, h, w = x.shape
-            x = x.reshape(b, -1)
-            if i == 0:
-                seq_ind = torch.arange(
-                    0, h*w, 
-                    dtype=torch.long,
-                    device=xs[0].device
-                )[None, :]
-            else:
-                seq_ind = torch.randint(
-                    0, h*w, 
-                    (b, self.model.block_size), 
-                    dtype=torch.long,
-                    device=xs[0].device
-                )
-            tok_seqs[:, i] = x.gather(1, seq_ind)
-            seq_inds[:, i] = seq_ind
-        return seq_inds, tok_seqs
-
+        batch = xs[0].shape[0]
+        shapes = [x.shape[1:] for x in xs]
+        layer_sample_shape = shapes[0]
+        masks = [MaskIndex2D.random(batch, dims=layer_sample_shape)]
+        for _ in range(3):
+            masks.append(masks[-1].upscale(2).perturb(layer_sample_shape))
+        masks = [m.to_inds(layer_sample_shape) for m in masks]
+        xs_sub = [x.flatten()[m.flatten()].reshape(batch, -1)
+                  for x, m in zip(xs, masks)]
+        xs_sub = torch.cat([x[:, None, :] for x in xs_sub], dim=1)
+        mask_inds = torch.cat([m[:, None, :] for m in masks], dim=1)
+        return mask_inds, xs_sub
 
     @torch.no_grad()
     def _sample(
@@ -156,7 +104,7 @@ class HierarchySampler:
         assert top_k <= self.model.emb_num, \
             f"top_k must be less than number of embeddings, {self.model.emb_num}"
         self.model.eval()
-        seq_inds, tok_seq = self.random_sub_sample(xs)
+        seq_inds, tok_seq = self.sub_sample(xs)
         logits = self.model(tok_seq, seq_inds)
         logits = logits / temperature
 

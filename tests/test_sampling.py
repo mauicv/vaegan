@@ -48,7 +48,7 @@ def test_sample_step():
     )
 
 
-@pytest.mark.parametrize('batch_size', [1, 4])
+@pytest.mark.parametrize('batch_size', [1, 4, 16])
 def test_hierarchy_sampler_sub_sample(batch_size):
     transformer = MultiScaleTransformer(
         n_heads=4, 
@@ -60,24 +60,8 @@ def test_hierarchy_sampler_sub_sample(batch_size):
     )
     sampler = HierarchySampler(transformer)
     xs = generate_xs(batch_size=batch_size)
-    inds, encs = sampler.sub_sample(xs, batch_size=batch_size)
-    assert inds.shape == (batch_size, 4, 64)
-    assert encs.shape == (batch_size, 4, 64)
+    inds, encs = sampler.sub_sample(xs)
 
-
-@pytest.mark.parametrize('batch_size', [1, 4])
-def test_hierarchy_sampler_sub_sample(batch_size):
-    transformer = MultiScaleTransformer(
-        n_heads=4, 
-        emb_dim=256, 
-        emb_num=10, 
-        depth=5, 
-        num_scales=4,
-        block_size=64
-    )
-    sampler = HierarchySampler(transformer)
-    xs = generate_xs(batch_size=batch_size)
-    inds, encs = sampler.random_sub_sample(xs)
     assert inds.shape == (batch_size, 4, 64)
     assert encs.shape == (batch_size, 4, 64)
 

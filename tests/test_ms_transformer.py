@@ -39,7 +39,7 @@ def test_ms_transformer_forward(n_heads):
         block_size=64)
     sampler = HierarchySampler(transformer)
     xs = generate_xs(batch_size=12)
-    inds, toks = sampler.random_sub_sample(xs)
+    inds, toks = sampler.sub_sample(xs)
 
     token_counts = [8*8, 16*16, 32*32, 64*64]
     for ind, pos_emb in enumerate(transformer.pos_embs):
