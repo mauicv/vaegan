@@ -79,6 +79,7 @@ class HierarchySampler:
 
     def sub_sample(self, xs):
         batch = xs[0].shape[0]
+        device = xs[0].device
         shapes = [x.shape[1:] for x in xs]
         layer_sample_shape = shapes[0]
         masks = [MaskIndex2D.random(batch, dims=layer_sample_shape)]
@@ -89,6 +90,8 @@ class HierarchySampler:
                   for x, m in zip(xs, masks)]
         xs_sub = torch.cat([x[:, None, :] for x in xs_sub], dim=1)
         mask_inds = torch.cat([m[:, None, :] for m in masks], dim=1)
+        mask_inds = mask_inds.to(device)
+        xs_sub = xs_sub.to(device)
         return mask_inds, xs_sub
 
     @torch.no_grad()
