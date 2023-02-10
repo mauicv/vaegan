@@ -1,7 +1,6 @@
 import torch
 from torch.nn import functional as F
 from tqdm import tqdm
-# from duct.model.transformer.model import MultiScaleTransformer
 from duct.utils.mask_inds_2d import MaskIndex2D
 
 
@@ -83,7 +82,7 @@ class HierarchySampler:
         shapes = [x.shape[1:] for x in xs]
         layer_sample_shape = shapes[0]
         masks = [MaskIndex2D.random(batch, dims=layer_sample_shape)]
-        for _ in range(3):
+        for _ in range(len(xs) - 1):
             masks.append(masks[-1].upscale(2).perturb(layer_sample_shape))
         masks = [m.to_inds(layer_sample_shape) for m in masks]
         xs_sub = [x.flatten()[m.flatten()].reshape(batch, -1)
