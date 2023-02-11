@@ -29,7 +29,7 @@ def get_local_image_mask(image_size=(32, 32), patch_size=(6, 6)):
     return mask, indicies
 
 
-def resolution_mask(scales, seq_len):
+def get_resolution_mask(scales, seq_len):
     mask = torch.ones((scales, seq_len, scales, seq_len))
     mask_vals = torch.tril(torch.ones(scales, scales))
     mask = mask * mask_vals[:, None, :, None]

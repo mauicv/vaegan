@@ -100,14 +100,15 @@ class HierarchySampler:
             top_k=50,
             temperature=0.1,
             sample=True,
-            layers=None
+            layers=None,
+            mask=None
         ):
         assert xs[0].shape[0] == 1, "batch size must be 1"
         assert top_k <= self.model.emb_num, \
             f"top_k must be less than number of embeddings, {self.model.emb_num}"
         self.model.eval()
         seq_inds, tok_seq = self.sub_sample(xs)
-        logits = self.model(tok_seq, seq_inds)
+        logits = self.model(tok_seq, seq_inds, mask=mask)
         logits = logits / temperature
 
         if top_k is not None:
@@ -144,9 +145,10 @@ class HierarchySampler:
             temperature=0.1, 
             sample=True, 
             verbose=False,
-            layers=None
+            layers=None,
+            mask=None
         ):
         self.model.eval()
         for _ in tqdm(range(iterations), disable=not verbose):
-            xs = self._sample(xs, top_k, temperature, sample, layers=layers)
+            xs = self._sample(xs, top_k, temperature, sample, layers=layers, mask=mask)
         return xs

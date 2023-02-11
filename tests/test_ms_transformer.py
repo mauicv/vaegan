@@ -1,7 +1,7 @@
 import pytest
 import torch
 from duct.model.transformer.model import MultiScaleTransformer
-from duct.model.transformer.mask import resolution_mask
+from duct.model.transformer.mask import get_resolution_mask, get_causal_mask
 from duct.model.transformer.samplers import HierarchySampler
 
 
@@ -24,12 +24,13 @@ def generate_xs(emb_num=10, batch_size=10, device='cpu'):
 
 
 def test_resolution_mask():
-    mask, _ = resolution_mask(4, 128)
+    mask, _ = get_resolution_mask(4, 128)
     assert mask.shape == (4*128, 4*128)
 
 
-@pytest.mark.parametrize("n_heads", [4])
-def test_ms_transformer_forward(n_heads):
+@pytest.mark.parametrize("n_heads", [1, 4])
+@pytest.mark.parametrize("mask_type", ['causal', 'none'])
+def test_ms_transformer_forward(n_heads, mask_type):
     transformer = MultiScaleTransformer(
         n_heads=n_heads, 
         emb_dim=256, 
@@ -45,6 +46,10 @@ def test_ms_transformer_forward(n_heads):
     for ind, pos_emb in enumerate(transformer.pos_embs):
         assert pos_emb.weight.shape[0] == token_counts[ind]
 
-    y = transformer(toks, inds=inds)
+    mask = None
+    if mask_type == 'causal':
+        _, mask = get_causal_mask(4 * 64)
+
+    y = transformer(toks, inds=inds, mask=mask)
 
     assert y.shape == (12, 4, 64, 10)

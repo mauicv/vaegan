@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from duct.model.transformer.block import TransformerBlock
 from duct.model.transformer.base_transformer import BaseTransformer
-from duct.model.transformer.mask import resolution_mask
+from duct.model.transformer.mask import get_resolution_mask
 
 
 def get_timestep_embedding(timesteps, embedding_dim):
@@ -93,8 +93,6 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         self.n_heads = n_heads
         self.factor = factor
 
-        _, self.mask_inds = resolution_mask(num_scales, block_size)
-
         self.tok_embs = nn.ModuleList()
         self.pos_embs = nn.ModuleList()
         for scale in range(num_scales):
@@ -119,7 +117,9 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         b, l, s, t = x.shape
         return x.reshape(b, l*s, t)
 
-    def forward(self, x, inds):
+    def forward(self, x, inds, mask=None):
+        if mask is None:
+            _, mask = get_resolution_mask(self.num_scales, self.block_size)
         _, s, l = x.shape
         assert inds.shape[1] == s, f'inds must be of length {s}, got {inds.shape[1]}'
 
@@ -145,7 +145,7 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         x = self.drop(x)
 
         for layer in self.layers:
-            x = layer(x, mask=self.mask_inds)
+            x = layer(x, mask=mask)
         logits = self.linear(x)
 
         return self._postprocess_input(logits)
