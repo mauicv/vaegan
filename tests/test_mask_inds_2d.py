@@ -33,18 +33,28 @@ def test_perturbation():
     assert torch.all(a_p - a < 2)
 
 
-def test_upscale():
+def test_scale():
     a = MaskIndex2D.random(4, (8, 8))
-    b = a.upscale(2)
+    b = a.scale(2)
     a = a.to_2d()
     b = b.to_2d()
     assert torch.all(2*a == b)
 
+def test_snap():
+    a = MaskIndex2D.random(4, (8, 8))
+    d = a.snap(3, 2, 5, 6)
+    inds_2d = d.to_2d()
+    assert torch.all(inds_2d[:, 0] >= 3)
+    assert torch.all(inds_2d[:, 1] >= 2)
+    assert torch.all(inds_2d[:, 0] <= 5)
+    assert torch.all(inds_2d[:, 1] <= 6)
+
+
 @pytest.mark.skip(reason="Displays plots to screen")
-def test_4():
+def test_plot_masks():
     masks = [MaskIndex2D.random(4, dims=(8, 8))]
     for i in range(3):
-        masks.append(masks[-1].upscale(2).perturb((4, 4)))
+        masks.append(masks[-1].scale(2).perturb((4, 4)))
     masks = [m.to_mask((4, 4)).reshape(-1, *m.dims) for m in masks]
 
     _, axs = plt.subplots(ncols=4, nrows=4)

@@ -1,17 +1,18 @@
 import torch
 import pytest
 from duct.model.transformer.model import Transformer, MultiScaleTransformer
-from duct.model.transformer.samplers import sample_sequential, sample_step, HierarchySampler
+from duct.model.transformer.samplers import sample_sequential, sample_step, HierarchySampler, \
+    SequentialHierarchySampler
 from duct.model.transformer.mask import get_local_image_mask
 
 
-def generate_xs(emb_num=10, batch_size=10, device='cpu'):
+def generate_xs(s=(8, 8), emb_num=10, batch_size=10, device='cpu'):
     xs = []
     data_shapes = [
-        (8, 8), 
-        (16, 16), 
-        (32, 32), 
-        (64, 64)
+        s, 
+        (s_p**2 for s_p in s), 
+        (s_p**3 for s_p in s), 
+        (s_p**4 for s_p in s), 
     ]
     for data_shape in data_shapes:
         xs.append(torch.randint(
@@ -86,6 +87,56 @@ def test_hierarchy_sampler__sample(layers):
         iterations=2, 
         sample=True, 
         layers=layers
+    )
+    shapes_2 = [x.shape for x in xs]
+    assert shapes_1 == shapes_2
+
+
+@pytest.mark.parametrize('level', [0, 1, 2, 3])
+def test_sequential_hierarchy_sampler_window(level):
+    transformer = MultiScaleTransformer(
+        n_heads=4, 
+        emb_dim=256, 
+        emb_num=10, 
+        depth=5, 
+        num_scales=4,
+        block_size=4
+    )
+    sampler = SequentialHierarchySampler(transformer)
+    xs = generate_xs(s=(2, 2), batch_size=1)
+    for k, seq_toks, seq_inds in sampler.windows(xs, level=level):
+        assert seq_toks.shape == (1, 4, 4)
+        assert seq_inds.shape == (1, 4, 4)
+
+    r = torch.tensor([[[  0,   1,   2,   3],
+                       [ 10,  11,  14,  15],
+                       [ 54,  55,  62,  63],
+                       [238, 239, 254, 255]]])
+
+    for i in range(level + 1):
+        assert torch.all(seq_inds[0, i] == r[0, i])
+
+
+@pytest.mark.skip('TODO')
+@pytest.mark.parametrize('level', [0, 1, 2, 3])
+def test_sequential_hierarchy_sampler(level):
+    transformer = MultiScaleTransformer(
+        n_heads=4, 
+        emb_dim=256, 
+        emb_num=10, 
+        depth=5, 
+        num_scales=4,
+        block_size=4
+    )
+    sampler = SequentialHierarchySampler(transformer)
+    xs = generate_xs(s=(2, 2), batch_size=1)
+    shapes_1 = [x.shape for x in xs]
+    xs = sampler.sequential_sample_resolution(
+        xs, 
+        top_k=5,
+        temperature=1,
+        sample=True, 
+        level=level
     )
     shapes_2 = [x.shape for x in xs]
     assert shapes_1 == shapes_2

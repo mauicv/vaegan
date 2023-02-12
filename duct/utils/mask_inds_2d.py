@@ -2,16 +2,14 @@ import torch
 import numpy as np
 
 
-def upscale(mask_inds, factor):
+def scale(mask_inds, factor):
     h, w = mask_inds.dims
-    b = mask_inds.batch
-
-    inds = torch.cat((
+    inds = (torch.cat((
         (mask_inds.inds % h)[:, None], 
         (mask_inds.inds // w)[:, None]
         ), dim = 1
-    ) * factor
-    h, w = h * factor, w * factor
+    ) * factor).long()
+    h, w = int(h * factor), int(w * factor)
     return to_1d(inds, h, w)
 
 
@@ -33,34 +31,67 @@ def to_2d(mask_inds):
 def to_1d(inds, h, w):
     return MaskIndex2D.from_2d(dims=(h, w), inds=inds)
 
+def make_sqr_mask_ul(h, w, sqr_h, sqr_w):
+    sqr = torch.zeros(h, w)
+    sqr[0:sqr_h, 0:sqr_w] = 1
+    return sqr.flatten()
 
-def to_mask(mask_inds, mask_dims):
+def make_sqr_mask_br(h, w, sqr_h, sqr_w):
+    sqr = torch.zeros(h, w)
+    sqr[h - sqr_h:, w - sqr_w:] = 1
+    inds = (torch.arange(0, h*w) - 1) % (h * w)
+    return sqr.flatten()[inds]
+
+def to_mask(mask_inds, mask_dims, mask='ul'):
     h, w = mask_inds.dims
     inds = torch.arange(0, h*w)[None, :] - mask_inds.inds[:, None]
     inds = inds % (h*w)
-    mask_h, mask_w = mask_dims
-    sqr = torch.zeros(h, w)
-    sqr[0:mask_h, 0:mask_w] = 1
-    sqr = sqr.flatten()
-    return sqr[inds]
+    if isinstance(mask, str) or mask is None:
+        mask_h, mask_w = mask_dims
+        sqr = {
+            'ul': make_sqr_mask_ul,
+            'br': make_sqr_mask_br,
+            None: make_sqr_mask_ul
+        }[mask](h, w, mask_h, mask_w)
+        return sqr[inds]
+    else:
+        return mask[inds]
 
 
-def to_inds(mask_inds, mask_dims):
-    a, b = mask_dims
-    sqr = to_mask(mask_inds, mask_dims)
+def to_inds(mask_inds, mask_dims, mask='ul'):
+    sqr = to_mask(mask_inds, mask_dims, mask=mask)
+    # print(sqr.reshape(-1, *mask_inds.dims))
     return torch.nonzero(sqr)[:, 1] \
-        .reshape(-1, a * b)
+        .reshape(mask_inds.batch, -1)
+
+
+def snap(mask_inds, mins_h, mins_w, maxs_h, maxs_w):
+    assert mins_h <= maxs_h
+    assert mins_w <= maxs_w
+    assert mins_h >= 0 and mins_w >= 0
+    inds_2d = mask_inds.to_2d()
+    mins = torch.ones_like(inds_2d) * torch.tensor([mins_h, mins_w])
+    maxs = torch.ones_like(inds_2d) * torch.tensor([maxs_h, maxs_w])
+    inds_2d = torch.max(inds_2d, mins)
+    inds_2d = torch.min(inds_2d, maxs)
+    return to_1d(inds_2d, *mask_inds.dims)
 
 
 class MaskIndex2D:
-    def __init__(self, batch, dims, inds):
+    def __init__(self, dims, inds, batch=None):
         self._dims = np.array(dims)
+        if batch is None:
+            batch, *_ = inds.shape
         self.batch = batch
-        self.inds = inds % self.l
+        self._inds = inds
 
     @property
     def l(self):
         return np.prod(self._dims)
+
+    @property
+    def inds(self):
+        return self._inds % self.l
 
     @property
     def dims(self):
@@ -85,8 +116,8 @@ class MaskIndex2D:
     def perturb(self, bounds):
         return perturb(self, bounds)
 
-    def upscale(self, factor):
-        return upscale(self, factor)
+    def scale(self, factor):
+        return scale(self, factor)
 
     def __add__(self, other):
         a = to_2d(self)
@@ -98,8 +129,18 @@ class MaskIndex2D:
                 f'dims={tuple(self._dims)}, '
                 f'batch={self.batch}>')
 
-    def to_mask(self, mask_dims):
-        return to_mask(self, mask_dims)
+    def to_mask(self, mask_dims, mask=None):
+        return to_mask(self, mask_dims, mask=mask)
 
-    def to_inds(self, mask_dims):
-        return to_inds(self, mask_dims)
+    def to_inds(self, mask_dims, mask=None):
+        return to_inds(self, mask_dims, mask=mask)
+
+    def snap(self, mins_h, mins_w, maxs_h, maxs_w):
+        return snap(self, mins_h, mins_w, maxs_h, maxs_w)
+
+    def next(self):
+        return MaskIndex2D(
+            dims=self._dims,
+            inds=self._inds + 1,
+            batch=self.batch
+        )

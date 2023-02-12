@@ -1,7 +1,7 @@
 import torch
 from torch.nn import functional as F
 from tqdm import tqdm
-from duct.utils.mask_inds_2d import MaskIndex2D
+from duct.utils.mask_inds_2d import MaskIndex2D, snap
 
 
 def top_k_logits(logits, k):
@@ -75,22 +75,22 @@ def sample_step(
 class HierarchySampler:
     def __init__(self, model):
         self.model = model
+        self.device = next(model.parameters()).device
 
     def sub_sample(self, xs):
         batch = xs[0].shape[0]
-        device = xs[0].device
         shapes = [x.shape[1:] for x in xs]
         layer_sample_shape = shapes[0]
         masks = [MaskIndex2D.random(batch, dims=layer_sample_shape)]
         for _ in range(len(xs) - 1):
-            masks.append(masks[-1].upscale(2).perturb(layer_sample_shape))
+            masks.append(masks[-1].scale(2).perturb(layer_sample_shape))
         masks = [m.to_inds(layer_sample_shape) for m in masks]
         xs_sub = [x.flatten()[m.flatten()].reshape(batch, -1)
                   for x, m in zip(xs, masks)]
         xs_sub = torch.cat([x[:, None, :] for x in xs_sub], dim=1)
         mask_inds = torch.cat([m[:, None, :] for m in masks], dim=1)
-        mask_inds = mask_inds.to(device)
-        xs_sub = xs_sub.to(device)
+        mask_inds = mask_inds.to(self.device)
+        xs_sub = xs_sub.to(self.device)
         return mask_inds, xs_sub
 
     @torch.no_grad()
@@ -118,7 +118,7 @@ class HierarchySampler:
 
         if sample:
             probs = probs.cumsum(-1)
-            rns = torch.rand(b, s, l, 1, device=xs[0].device)
+            rns = torch.rand(b, s, l, 1, device=self.device)
             x = torch.searchsorted(probs, rns)
             x = x.squeeze(-1)
         else:
@@ -152,3 +152,81 @@ class HierarchySampler:
         for _ in tqdm(range(iterations), disable=not verbose):
             xs = self._sample(xs, top_k, temperature, sample, layers=layers, mask=mask)
         return xs
+
+
+class SequentialHierarchySampler:
+    def __init__(self, model):
+        self.model = model
+        self.device = next(model.parameters()).device
+        self.block_size = model.block_size
+
+    @torch.no_grad()
+    def sequential_sample_resolution(
+            self,
+            xs,
+            temperature=1.0, 
+            top_k=50, 
+            sample=True, 
+            mask=None, 
+            verbose=False,
+            level=0
+        ):
+        self.model.eval()
+        seq_length = self.block_size
+        mask_dims = xs[0].shape[1:]
+
+        seq_toks = torch.zeros(
+            1, self.model.num_scales, seq_length,
+            dtype=torch.long,
+            device=self.device
+        )
+
+        print(seq_toks.shape, [x.shape for x in xs], xs[level].shape[-1])
+
+        xs_lengths = [x.reshape(1, -1).shape[-1] for x in xs]
+
+        for k, seq_toks, seq_inds in tqdm(self.windows(xs, level=level), disable=not verbose):
+            print(k, seq_toks.shape, seq_inds.shape)
+            logits = self.model(seq_toks, inds=seq_inds, mask=mask)
+            print(logits.shape)
+            # logits = logits[:, k-1, :] / temperature
+            # if top_k is not None:
+            #     logits = top_k_logits(logits, top_k)
+            # probs = F.softmax(logits, dim=-1)
+            # if sample:
+            #     ix = torch.multinomial(probs, num_samples=1)
+            # else:
+            #     _, ix = torch.topk(probs, k=1, dim=-1)
+            # seq[0, k] = ix
+
+        # return xs ... the following is wrong
+        return seq_toks[0]
+
+
+    def windows(self, xs, level=0, verbose=False):
+        xs_lengths = [x.reshape(1, -1).shape[-1] for x in xs]
+        mask_dims = xs[0].shape[1:]
+        seq_toks = torch.zeros(
+            1, self.model.num_scales, self.block_size,
+            dtype=torch.long,
+            device=self.device
+        )
+        seq_inds = torch.zeros(
+            1, self.model.num_scales, self.block_size,
+            dtype=torch.long,
+            device=self.device
+        )
+        for k in range(0, xs_lengths[level]):
+            inds = torch.tensor([k])
+            b, h, w = xs[level].shape
+            inds = MaskIndex2D(inds=inds, batch=b, dims=(h, w))
+            for ind, x in enumerate(reversed(xs[:level+1])):
+                x_r = x.reshape(1, -1)
+                mask_inds = inds
+                mask_h, mask_w = mask_dims
+                mask_inds = snap(inds, mask_h-1, mask_w-1, h, w)
+                mask = mask_inds.to_inds(mask_dims=mask_dims, mask='br')
+                inds = inds.scale(0.5)
+                seq_toks[:, level - ind, :] = x_r[:, mask]
+                seq_inds[:, level - ind, :] = mask
+            yield k, seq_toks, seq_inds
