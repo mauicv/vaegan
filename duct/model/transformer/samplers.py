@@ -172,38 +172,26 @@ class SequentialHierarchySampler:
             level=0
         ):
         self.model.eval()
-        seq_length = self.block_size
-        mask_dims = xs[0].shape[1:]
-
-        seq_toks = torch.zeros(
-            1, self.model.num_scales, seq_length,
-            dtype=torch.long,
-            device=self.device
-        )
-
-        print(seq_toks.shape, [x.shape for x in xs], xs[level].shape[-1])
-
-        xs_lengths = [x.reshape(1, -1).shape[-1] for x in xs]
 
         for k, seq_toks, seq_inds in tqdm(self.windows(xs, level=level), disable=not verbose):
-            print(k, seq_toks.shape, seq_inds.shape)
             logits = self.model(seq_toks, inds=seq_inds, mask=mask)
-            print(logits.shape)
-            # logits = logits[:, k-1, :] / temperature
-            # if top_k is not None:
-            #     logits = top_k_logits(logits, top_k)
-            # probs = F.softmax(logits, dim=-1)
-            # if sample:
-            #     ix = torch.multinomial(probs, num_samples=1)
-            # else:
-            #     _, ix = torch.topk(probs, k=1, dim=-1)
+            logits = logits[:, level, min(k - 1, self.block_size - 1), :] / temperature
+            if top_k is not None:
+                logits = top_k_logits(logits, top_k)
+            probs = F.softmax(logits, dim=-1)
+            if sample:
+                ix = torch.multinomial(probs, num_samples=1)
+            else:
+                _, ix = torch.topk(probs, k=1, dim=-1)
+            k_ind = torch.max(torch.min(torch.tensor([k]), seq_inds[:, level]))
+            # print(ix, k_ind)
+            # print(xs[level].reshape(1, -1)[:, k_ind])
+            xs[level].reshape(1, -1)[:, k_ind] = ix
             # seq[0, k] = ix
-
-        # return xs ... the following is wrong
-        return seq_toks[0]
+        return xs
 
 
-    def windows(self, xs, level=0, verbose=False):
+    def windows(self, xs, level=0):
         xs_lengths = [x.reshape(1, -1).shape[-1] for x in xs]
         mask_dims = xs[0].shape[1:]
         seq_toks = torch.zeros(
@@ -216,7 +204,7 @@ class SequentialHierarchySampler:
             dtype=torch.long,
             device=self.device
         )
-        for k in range(0, xs_lengths[level]):
+        for k in range(0, xs_lengths[level] - 1):
             inds = torch.tensor([k])
             b, h, w = xs[level].shape
             inds = MaskIndex2D(inds=inds, batch=b, dims=(h, w))

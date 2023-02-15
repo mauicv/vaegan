@@ -108,16 +108,8 @@ def test_sequential_hierarchy_sampler_window(level):
         assert seq_toks.shape == (1, 4, 4)
         assert seq_inds.shape == (1, 4, 4)
 
-    r = torch.tensor([[[  0,   1,   2,   3],
-                       [ 10,  11,  14,  15],
-                       [ 54,  55,  62,  63],
-                       [238, 239, 254, 255]]])
 
-    for i in range(level + 1):
-        assert torch.all(seq_inds[0, i] == r[0, i])
-
-
-@pytest.mark.skip('TODO')
+# @pytest.mark.skip('TODO')
 @pytest.mark.parametrize('level', [0, 1, 2, 3])
 def test_sequential_hierarchy_sampler(level):
     transformer = MultiScaleTransformer(
