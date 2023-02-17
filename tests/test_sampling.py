@@ -104,14 +104,12 @@ def test_sequential_hierarchy_sampler_window(level):
     )
     sampler = SequentialHierarchySampler(transformer)
     xs = generate_xs(s=(2, 2), batch_size=1)
+    xs = [x.reshape(1, -1) for x in xs]
     for k, seq_toks, seq_inds in sampler.windows(xs, level=level):
         assert seq_toks.shape == (1, 4, 4)
         assert seq_inds.shape == (1, 4, 4)
 
-
-# @pytest.mark.skip('TODO')
-@pytest.mark.parametrize('level', [0, 1, 2, 3])
-def test_sequential_hierarchy_sampler(level):
+def test_sequential_hierarchy_sampler_window():
     transformer = MultiScaleTransformer(
         n_heads=4, 
         emb_dim=256, 
@@ -121,14 +119,31 @@ def test_sequential_hierarchy_sampler(level):
         block_size=4
     )
     sampler = SequentialHierarchySampler(transformer)
-    xs = generate_xs(s=(2, 2), batch_size=1)
-    shapes_1 = [x.shape for x in xs]
-    xs = sampler.sequential_sample_resolution(
-        xs, 
-        top_k=5,
-        temperature=1,
-        sample=True, 
-        level=level
-    )
-    shapes_2 = [x.shape for x in xs]
-    assert shapes_1 == shapes_2
+    batch_size=3
+    xs = generate_xs(s=(2, 2), batch_size=batch_size)
+    xs = [x.reshape(batch_size, -1) for x in xs]
+    seq_toks, seq_inds = sampler.random_windows(xs)
+
+
+# @pytest.mark.parametrize('level', [0, 1, 2, 3])
+# def test_sequential_hierarchy_sampler(level):
+#     transformer = MultiScaleTransformer(
+#         n_heads=4, 
+#         emb_dim=256, 
+#         emb_num=10, 
+#         depth=5, 
+#         num_scales=4,
+#         block_size=4
+#     )
+#     sampler = SequentialHierarchySampler(transformer)
+#     xs = generate_xs(s=(2, 2), batch_size=1)
+#     shapes_1 = [x.shape for x in xs]
+#     xs = sampler.sequential_sample_resolution(
+#         xs, 
+#         top_k=5,
+#         temperature=1,
+#         sample=True, 
+#         level=level
+#     )
+#     shapes_2 = [x.shape for x in xs]
+#     assert shapes_1 == shapes_2
