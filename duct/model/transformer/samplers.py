@@ -5,7 +5,7 @@ from duct.utils.mask_inds_2d import MaskIndex2D, snap
 
 
 def top_k_logits(logits, k):
-    v, _ = torch.topk(logits, k)
+    v, _ = torch.topk(logits, k, -1)
     out = logits.clone()
     out[out < v[..., [-1]]] = -float('Inf')
     return out
@@ -251,9 +251,10 @@ class SequentialHierarchySampler:
             logits = self.model(seq_toks, inds=seq_inds, mask=mask)
             logits = logits[:, level, min(k - 1, self.block_size - 1), :] \
                 / temperature
+
             if top_k is not None:
                 logits = top_k_logits(logits, top_k)
-            probs = F.softmax(logits, dim=-1)
+            probs = F.softmax(logits, dim=-1).squeeze()
             if sample:
                 ix = torch.multinomial(probs, num_samples=1)
             else:
@@ -309,4 +310,3 @@ class SequentialHierarchySampler:
             seq_inds[:, s - ind, :] = k_inds
             inds = inds // 4
         return seq_toks, seq_inds
-
