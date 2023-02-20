@@ -81,7 +81,7 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
             num_scales,
             n_heads=1, 
             depth=5,
-            factor=4,
+            factor=2,
         ):
         super().__init__()
         BaseTransformer.__init__(self)
