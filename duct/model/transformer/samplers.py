@@ -276,7 +276,7 @@ class SequentialHierarchySampler:
         )
         for k in range(0, xs[level].shape[-1]):
             k = torch.tensor([k], device=self.device)
-            b, l = xs[level].shape
+            b, _ = xs[level].shape
             for ind, x in enumerate(xs):
                 x_inds = torch.arange(0, self.block_size, device=self.device)[None]
                 k_ind = min(max(k * 4 ** ind, self.block_size), xs[ind].shape[-1]) 
