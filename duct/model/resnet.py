@@ -60,4 +60,5 @@ class ResnetBlock(Module):
             else:
                 x = self.nin_shortcut(x)
 
+        # Should we normalize before adding?
         return x+h

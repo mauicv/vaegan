@@ -5,10 +5,11 @@ from duct.model.samplers.util import top_k_logits
 
 
 class HierarchicalSequentialSampler:
-    def __init__(self, model):
+    def __init__(self, model, ratio=2):
         self.model = model
         self.device = next(model.parameters()).device
         self.block_size = model.block_size
+        self.ratio = ratio
 
     @torch.no_grad()
     def sequential_sample_resolution(
@@ -85,5 +86,5 @@ class HierarchicalSequentialSampler:
             k_inds = k_inds + inds
             seq_toks[:, s - ind, :] = torch.gather(x, 1, k_inds)
             seq_inds[:, s - ind, :] = k_inds
-            inds = inds // 2
+            inds = inds // self.ratio
         return seq_toks, seq_inds
