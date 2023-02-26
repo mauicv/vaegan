@@ -35,7 +35,7 @@ class HierarchicalSequentialSampler:
                 logits = top_k_logits(logits, top_k)
             probs = F.softmax(logits, dim=-1)
             if sample:
-                ix = torch.multinomial(probs, num_samples=1)
+                ix = torch.multinomial(probs.squeeze(), num_samples=1)
             else:
                 _, ix = torch.topk(probs, k=1, dim=-1)
             xs[level].reshape(1, -1)[:, k] = ix

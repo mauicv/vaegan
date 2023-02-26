@@ -73,3 +73,18 @@ def test_sequential_hierarchy_sampler_window():
     batch_size=2
     xs = generate_xs(s=8, batch_size=batch_size)
     seq_toks, seq_inds = sampler.random_windows(xs)
+
+
+def test_sequential_hierarchy_sampler_sequential_sample_resolution():
+    transformer = MultiScaleTransformer(
+        n_heads=4, 
+        emb_dim=256, 
+        emb_num=10, 
+        depth=5,
+        num_scales=4,
+        block_size=8
+    )
+    sampler = HierarchicalSequentialSampler(transformer)
+    batch_size=1
+    xs = generate_xs(s=8, batch_size=batch_size)
+    xs = sampler.sequential_sample_resolution(xs, top_k=5)
