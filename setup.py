@@ -12,7 +12,8 @@ setup(
         'duct.model',
         'duct.utils',
         'duct.model.latent_spaces',
-        'duct.model.transformer'
+        'duct.model.transformer',
+        'duct.model.samplers',
     ],
     install_requires=[
         "torch>=1.7.0, <1.14.0",
