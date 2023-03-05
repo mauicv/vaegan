@@ -3,6 +3,7 @@ from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncod
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 from duct.model.transformer.model import Transformer, MultiScaleTransformer
+from duct.model.transformer_critic import TransformerCritic
 
 
 
@@ -17,7 +18,8 @@ class ModelRegistry:
             'VQVarAutoEncoder': VQVarAutoEncoder,
             'VQVarAutoEncoder': VQVarAutoEncoder,
             'Transformer': Transformer,
-            'MultiScaleTransformer': MultiScaleTransformer
+            'MultiScaleTransformer': MultiScaleTransformer,
+            'TransformerCritic': TransformerCritic,
         }
 
     def __getitem__(self, item):
