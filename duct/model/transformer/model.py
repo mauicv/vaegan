@@ -5,7 +5,7 @@ and adjusted."""
 import math
 import torch
 import torch.nn as nn
-from duct.model.transformer.block import TransformerBlock
+from duct.model.transformer.block import TransformerBlock, RelEmbTransformerBlock
 from duct.model.transformer.base_transformer import BaseTransformer
 from duct.model.transformer.mask import get_resolution_mask
 
@@ -30,7 +30,7 @@ class Transformer(nn.Module, BaseTransformer):
             block_size, 
             n_heads=1, 
             depth=5, 
-            trainable_pos_embeddings=True
+            trainable_pos_embeddings=True,
         ):
         super().__init__()
         BaseTransformer.__init__(self)
@@ -72,40 +72,30 @@ class Transformer(nn.Module, BaseTransformer):
         return logits
 
 
-class MultiScaleTransformer(nn.Module, BaseTransformer):
+class RelEmbTransformer(nn.Module, BaseTransformer):
     def __init__(
             self, 
             emb_dim, 
             emb_num, 
             block_size, 
-            num_scales,
             n_heads=1, 
-            depth=5,
-            factor=2,
+            depth=5, 
+            trainable_pos_embeddings=True,
         ):
         super().__init__()
         BaseTransformer.__init__(self)
-        self.num_scales = num_scales
+
+        self.tok_emb = nn.Embedding(emb_num, emb_dim)
         self.block_size = block_size
         self.emb_num = emb_num
         self.emb_dim = emb_dim
         self.depth = depth
         self.n_heads = n_heads
-        self.factor = factor
-
-        self.tok_embs = nn.ModuleList()
-        self.pos_embs = nn.ModuleList()
-        for scale in range(num_scales):
-            self.tok_embs.append(nn.Embedding(emb_num, emb_dim))
-            self.pos_embs.append(nn.Embedding(block_size*(self.factor**scale), emb_dim))
-
-        self.pos_emb = nn.Embedding(block_size, emb_dim)
-        self.scale_emb = nn.Embedding(num_scales, emb_dim)
-
         self.layers = nn.ModuleList()
         for _ in range(depth):
-            transformer_block = TransformerBlock(
+            transformer_block = RelEmbTransformerBlock(
                 emb_dim, 
+                self.block_size,
                 n_heads=n_heads,
             )
             self.layers.append(transformer_block)
@@ -113,42 +103,10 @@ class MultiScaleTransformer(nn.Module, BaseTransformer):
         self.drop = nn.Dropout(0.1)
         self.apply(self._init_weights)
 
-    def _preprocess_input(self, x):
-        b, l, s, t = x.shape
-        return x.reshape(b, l*s, t)
-
-    def forward(self, x, inds, mask=None):
-        if mask is None:
-            _, mask = get_resolution_mask(self.num_scales, self.block_size)
-        _, s, l = x.shape
-        assert inds.shape[1] == s, f'inds must be of length {s}, got {inds.shape[1]}'
-
-        x_scales = torch.split(x, 1, dim=1)
-        tok_scales = tuple(tok_emb(x_s) for tok_emb, x_s
-                         in zip(self.tok_embs, x_scales))
-        tok_emb = torch.cat(tok_scales, dim=1)
-
-        pos_embs = []
-        for ind, pos_emb in zip(inds.permute(1, 0, 2), self.pos_embs):
-            pos_embs.append(pos_emb(ind).unsqueeze(1))
-        pos_emb = torch.cat(pos_embs, dim=1)
-        if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
-
-        scale = torch.arange(0, s, dtype=torch.long, device=x.device)
-        scale_emb = self.scale_emb(scale)
-        if next(self.parameters()).is_cuda: scale_emb = scale_emb.cuda()
-
-        x = tok_emb + pos_emb \
-            + scale_emb[None, :, None, :]
-
-        x = self._preprocess_input(x)
+    def forward(self, x, mask=None):
+        x = self.tok_emb(x)
         x = self.drop(x)
-
         for layer in self.layers:
             x = layer(x, mask=mask)
         logits = self.linear(x)
-
-        return self._postprocess_input(logits)
-
-    def _postprocess_input(self, x):
-        return x.reshape(-1, self.num_scales, self.block_size, self.emb_num)
+        return logits

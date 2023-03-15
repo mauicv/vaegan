@@ -1,7 +1,7 @@
 import pytest
 import torch
-from duct.model.transformer.model import Transformer
-from duct.model.transformer.block import TransformerBlock, AttnBlock
+from duct.model.transformer.model import Transformer, RelEmbTransformer
+from duct.model.transformer.block import TransformerBlock, AttnBlock, RelAttnBlock
 from duct.model.transformer.mask import get_local_image_mask, get_causal_mask
 
 
@@ -12,6 +12,16 @@ def test_attn_block(n_heads):
     y = attn_block(x)
     assert y.shape == x.shape
 
+
+@pytest.mark.parametrize("n_heads", [4])
+def test_rel_attn_block(n_heads):
+    attn_block = RelAttnBlock(
+        emb_dim=64, 
+        block_size=128,
+        n_heads=n_heads)
+    x = torch.randn(64, 128, 64)
+    y = attn_block(x)
+    assert y.shape == x.shape
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
 def test_transformer_block(n_heads):
@@ -31,6 +41,19 @@ def test_transformer(n_heads, trainable_pos_embeddings):
         depth=5, 
         block_size=128, 
         trainable_pos_embeddings=trainable_pos_embeddings)
+    x = torch.randint(0, 10, (64, 128))
+    y = transformer(x)
+    assert y.shape == (64, 128, 10)
+
+
+@pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
+def test_rel_emb_transformer(n_heads):
+    transformer = RelEmbTransformer(
+        n_heads=n_heads, 
+        emb_dim=256, 
+        emb_num=10, 
+        depth=5, 
+        block_size=128)
     x = torch.randint(0, 10, (64, 128))
     y = transformer(x)
     assert y.shape == (64, 128, 10)

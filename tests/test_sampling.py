@@ -1,6 +1,6 @@
 import torch
 import pytest
-from duct.model.transformer.model import Transformer, MultiScaleTransformer
+from duct.model.transformer.model import Transformer
 from duct.model.samplers import sample_sequential, sample_step, HierarchicalSequentialSampler
 from duct.model.transformer.mask import get_local_image_mask
 
@@ -41,50 +41,3 @@ def test_sample_step():
         sample=True, 
         verbose=False
     )
-
-
-@pytest.mark.parametrize('level', [0, 1, 2, 3])
-def test_sequential_hierarchy_sampler_window(level):
-    transformer = MultiScaleTransformer(
-        n_heads=4, 
-        emb_dim=256, 
-        emb_num=10, 
-        depth=5, 
-        num_scales=4,
-        block_size=4
-    )
-    sampler = HierarchicalSequentialSampler(transformer)
-    xs = generate_xs(s=4, batch_size=1)
-    xs = [x.reshape(1, -1) for x in xs]
-    for k, seq_toks, seq_inds in sampler.windows(xs, level=level):
-        assert seq_toks.shape == (1, 4, 4)
-        assert seq_inds.shape == (1, 4, 4)
-
-def test_sequential_hierarchy_sampler_window():
-    transformer = MultiScaleTransformer(
-        n_heads=4, 
-        emb_dim=256, 
-        emb_num=10, 
-        depth=5, 
-        num_scales=4,
-        block_size=4
-    )
-    sampler = HierarchicalSequentialSampler(transformer)
-    batch_size=2
-    xs = generate_xs(s=8, batch_size=batch_size)
-    seq_toks, seq_inds = sampler.random_windows(xs)
-
-
-def test_sequential_hierarchy_sampler_sequential_sample_resolution():
-    transformer = MultiScaleTransformer(
-        n_heads=4, 
-        emb_dim=256, 
-        emb_num=10, 
-        depth=5,
-        num_scales=4,
-        block_size=8
-    )
-    sampler = HierarchicalSequentialSampler(transformer)
-    batch_size=1
-    xs = generate_xs(s=8, batch_size=batch_size)
-    xs = sampler.sequential_sample_resolution(xs, top_k=5)
