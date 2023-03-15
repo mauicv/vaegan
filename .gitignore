@@ -11,3 +11,4 @@ build
 fma_small
 .DS_store
 _tmp_
+.pytest_cache
