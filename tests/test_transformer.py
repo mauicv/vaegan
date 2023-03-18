@@ -100,3 +100,15 @@ def test_transformer_weight_decay_params():
     num_no_decay_params = len(param_groups[1]['params'])
     total_params = len(list(transformer.parameters()))
     assert num_decay_params + num_no_decay_params == total_params
+
+# temporary test
+
+@pytest.mark.parametrize("n_heads", [8])
+def test_rel_emb_transformer_2(n_heads):
+    transformer = RelEmbTransformer(
+        n_heads=n_heads, emb_dim=256,
+        emb_num=10, depth=5, block_size=128
+    )
+    x = torch.randint(0, 10, (1, 5))
+    y = transformer(x)
+    assert y.shape == (1, 5, 10)

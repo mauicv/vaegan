@@ -28,12 +28,15 @@ class RelAttnBlock(nn.Module):
             block_size,
             self.head_size
         ))
+        self.block_size = block_size
 
     def forward(self, x, mask=None):
         if mask is not None:
             if next(self.parameters()).is_cuda: mask = mask.cuda()
 
         _, l, _ = x.shape
+        embedding_start = self.block_size - l
+
         h_ = x
         h_ = self.norm(h_)
         tensor_shape = (-1, l, self.n_heads, self.head_size)
@@ -47,7 +50,8 @@ class RelAttnBlock(nn.Module):
             .reshape(*tensor_shape)\
             .transpose(1,2) # b, nh, l, hs
 
-        QEr = torch.matmul(q, self.Er.unsqueeze(0).transpose(-1, -2))
+        Er = self.Er[:, embedding_start:, :].unsqueeze(0)
+        QEr = torch.matmul(q, Er.transpose(-1, -2))
         SRel = self._skew(QEr)
 
         # compute attention
@@ -70,7 +74,6 @@ class RelAttnBlock(nn.Module):
             .reshape(-1, l, self.emb_dim) \
             .contiguous() # b, l, nh*hs
         h_ = self.resid_drop(self.proj_out(h_))
-
         return h_
 
     def _skew(self, qe):
