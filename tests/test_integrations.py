@@ -97,3 +97,28 @@ def test_exp_transformer(tmp_path):
     test_class.save_state(tmp_path / 'model.pt')
     test_class.load_state(tmp_path / 'model.pt')
     # test_class.save_training_artifacts(aud_1, aud_2)
+
+
+def test_rel_emb_transformer(tmp_path):
+    # tmp_path = './test_path'
+    (tmp_path / 'test').mkdir()
+    shutil.copyfile('./tests/test_configs/rel_emb_transformer.toml', str(tmp_path / 'test' / 'config.toml'))
+
+    class Experiment(ConfigMixin, LoggingMixin):
+        headers = ['transformer_opt']
+        name = 'test'
+        path = str(tmp_path)
+
+    test_class = Experiment.init()
+    test_class.setup_logs()
+
+    assert test_class.models == ['transformer']
+    assert test_class.optimizers == ['transformer_opt']
+
+    seq = torch.randint(0, 10, (64, 100))
+    output_probs = test_class.transformer(seq)
+    assert output_probs.shape == (64, 100, 10)
+
+    test_class.save_state(tmp_path / 'model.pt')
+    test_class.load_state(tmp_path / 'model.pt')
+    # test_class.save_training_artifacts(aud_1, aud_2)
