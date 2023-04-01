@@ -1,13 +1,15 @@
 import pytest
 import torch
 from duct.model.transformer.model import Transformer, RelEmbTransformer
-from duct.model.transformer.block import TransformerBlock, AttnBlock, RelAttnBlock
+from duct.model.transformer.block import TransformerBlock
+from duct.model.transformer.attention import AttnBlock
+from duct.model.transformer.relative_attention import RelAttnBlock, SkewedRelAttnBlock
 from duct.model.transformer.mask import get_local_image_mask, get_causal_mask
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
 def test_attn_block(n_heads):
-    attn_block = AttnBlock(emb_dim=64, n_heads=n_heads)
+    attn_block = AttnBlock(emb_dim=64, block_size=128, n_heads=n_heads)
     x = torch.randn(64, 128, 64)
     y = attn_block(x)
     assert y.shape == x.shape
@@ -15,17 +17,25 @@ def test_attn_block(n_heads):
 
 @pytest.mark.parametrize("n_heads", [4])
 def test_rel_attn_block(n_heads):
-    attn_block = RelAttnBlock(
-        emb_dim=64, 
+    attn_block = SkewedRelAttnBlock(
+        emb_dim=64,
         block_size=128,
         n_heads=n_heads)
     x = torch.randn(64, 128, 64)
     y = attn_block(x)
     assert y.shape == x.shape
 
+
+def test_rel_attn_block():
+    attn_block = RelAttnBlock(emb_dim=64, block_size=128, n_heads=4)
+    x = torch.randn(64, 128, 64)
+    y = attn_block(x)
+    assert y.shape == x.shape
+
+
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
 def test_transformer_block(n_heads):
-    transformer = TransformerBlock(n_heads=n_heads, emb_dim=64)
+    transformer = TransformerBlock(n_heads=n_heads, block_size=128, emb_dim=64)
     x = torch.randn(64, 128, 64)
     y = transformer(x)
     assert y.shape == x.shape
@@ -47,13 +57,28 @@ def test_transformer(n_heads, trainable_pos_embeddings):
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
-def test_rel_emb_transformer(n_heads):
+def test_skewed_rel_emb_transformer(n_heads):
     transformer = RelEmbTransformer(
         n_heads=n_heads, 
         emb_dim=256, 
         emb_num=10, 
         depth=5, 
-        block_size=128)
+        block_size=128,
+        rel_emb_type="skewed")
+    x = torch.randint(0, 10, (64, 128))
+    y = transformer(x)
+    assert y.shape == (64, 128, 10)
+
+
+@pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
+def test_full_rel_emb_transformer(n_heads):
+    transformer = RelEmbTransformer(
+        n_heads=n_heads, 
+        emb_dim=256, 
+        emb_num=10, 
+        depth=5, 
+        block_size=128,
+        rel_emb_type="full")
     x = torch.randint(0, 10, (64, 128))
     y = transformer(x)
     assert y.shape == (64, 128, 10)
@@ -100,15 +125,3 @@ def test_transformer_weight_decay_params():
     num_no_decay_params = len(param_groups[1]['params'])
     total_params = len(list(transformer.parameters()))
     assert num_decay_params + num_no_decay_params == total_params
-
-# temporary test
-
-@pytest.mark.parametrize("n_heads", [8])
-def test_rel_emb_transformer_2(n_heads):
-    transformer = RelEmbTransformer(
-        n_heads=n_heads, emb_dim=256,
-        emb_num=10, depth=5, block_size=128
-    )
-    x = torch.randint(0, 10, (1, 5))
-    y = transformer(x)
-    assert y.shape == (1, 5, 10)

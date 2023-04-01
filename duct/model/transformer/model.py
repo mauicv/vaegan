@@ -5,9 +5,11 @@ and adjusted."""
 import math
 import torch
 import torch.nn as nn
-from duct.model.transformer.block import TransformerBlock, RelEmbTransformerBlock
+from duct.model.transformer.block import TransformerBlock
 from duct.model.transformer.base_transformer import BaseTransformer
-from duct.model.transformer.mask import get_resolution_mask
+from duct.model.transformer.attention import AttnBlock
+from duct.model.transformer.relative_attention import RelAttnBlock, SkewedRelAttnBlock
+
 
 
 def get_timestep_embedding(timesteps, embedding_dim):
@@ -47,6 +49,7 @@ class Transformer(nn.Module, BaseTransformer):
         for _ in range(depth):
             transformer_block = TransformerBlock(
                 emb_dim, 
+                self.block_size,
                 n_heads=n_heads,
             )
             self.layers.append(transformer_block)
@@ -80,7 +83,7 @@ class RelEmbTransformer(nn.Module, BaseTransformer):
             block_size, 
             n_heads=1, 
             depth=5, 
-            trainable_pos_embeddings=True,
+            rel_emb_type='skewed', # 'full' or 'skewed'
         ):
         super().__init__()
         BaseTransformer.__init__(self)
@@ -93,10 +96,12 @@ class RelEmbTransformer(nn.Module, BaseTransformer):
         self.n_heads = n_heads
         self.layers = nn.ModuleList()
         for _ in range(depth):
-            transformer_block = RelEmbTransformerBlock(
+            transformer_block = TransformerBlock(
                 emb_dim, 
                 self.block_size,
                 n_heads=n_heads,
+                attn_block=RelAttnBlock if rel_emb_type == 'full' \
+                    else SkewedRelAttnBlock,
             )
             self.layers.append(transformer_block)
         self.linear = nn.Linear(emb_dim, emb_num)

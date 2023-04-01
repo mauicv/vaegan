@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class RelAttnBlock(nn.Module):
+class SkewedRelAttnBlock(nn.Module):
     def __init__(self, emb_dim, block_size, n_heads=1):
         super().__init__()
         assert emb_dim % n_heads == 0
@@ -32,7 +32,7 @@ class RelAttnBlock(nn.Module):
 
     def forward(self, x, mask=None):
         if mask is not None:
-            if next(self.parameters()).is_cuda: mask = mask.cuda()
+            mask = mask.to(next(self.parameters()).device)
 
         _, l, _ = x.shape
         embedding_start = self.block_size - l
@@ -47,7 +47,7 @@ class RelAttnBlock(nn.Module):
             .reshape(*tensor_shape) \
             .transpose(1,2) # b, nh, l, hs
         v = self.v(h_) \
-            .reshape(*tensor_shape)\
+            .reshape(*tensor_shape) \
             .transpose(1,2) # b, nh, l, hs
 
         Er = self.Er[:, embedding_start:, :].unsqueeze(0)
@@ -81,3 +81,75 @@ class RelAttnBlock(nn.Module):
         s = padded_qe.shape
         padded_qe = padded_qe.view(s[0], s[1], s[3], s[2])
         return padded_qe[:,:,1:,:]
+
+
+def generate_relative_positions(L):
+    positions = torch.arange(L).unsqueeze(0) - torch.arange(L).unsqueeze(1)
+    return positions
+
+
+class RelAttnBlock(nn.Module):
+    def __init__(self, emb_dim, block_size, n_heads=1):
+        super().__init__()
+        assert emb_dim % n_heads == 0
+        self.n_heads = n_heads
+        self.emb_dim = emb_dim
+        self.norm = nn.LayerNorm(emb_dim)
+        self.q = torch.nn.Linear(emb_dim, emb_dim)
+        self.k = torch.nn.Linear(emb_dim, emb_dim)
+        self.v = torch.nn.Linear(emb_dim, emb_dim)
+        self.proj_out = torch.nn.Linear(emb_dim, emb_dim)
+        self.head_size = self.emb_dim // self.n_heads
+        self.attn_drop = nn.Dropout(0.1)
+        self.resid_drop = nn.Dropout(0.1)
+        self.Er = nn.Parameter(torch.randn(
+            self.n_heads, 
+            block_size,
+            self.head_size
+        ))
+        self.block_size = block_size
+
+    def forward(self, x, mask=None):
+        if mask is not None:
+            mask = mask.to(next(self.parameters()).device)
+
+        _, l, _ = x.shape
+        rel_pos = generate_relative_positions(l)
+        Er = self.Er[:, rel_pos].unsqueeze(0)
+
+        h_ = x
+        h_ = self.norm(h_)
+        tensor_shape = (-1, l, self.n_heads, self.head_size)
+        q = self.q(h_) \
+            .reshape(*tensor_shape) \
+            .transpose(1,2) # b, nh, l, hs
+        k = self.k(h_) \
+            .reshape(*tensor_shape) \
+            .transpose(1,2) # b, nh, l, hs
+        v = self.v(h_) \
+            .reshape(*tensor_shape) \
+            .transpose(1,2) # b, nh, l, hs
+
+        # compute attention
+        w_ = q @ k.transpose(2,3) # b, nh, l, l
+        w_ = w_ * (int(self.head_size)**(-0.5))
+
+        QEr = torch.einsum('bnlh,rnlkh->bnlk', q, Er)  # b, nh, l, l
+
+        if mask is not None:
+            w_ = w_.masked_fill(mask, float('-inf'))
+            QEr = QEr.masked_fill(mask, float('-inf'))
+
+        w_ = w_ + QEr
+
+        w_ = torch.nn.functional.softmax(w_, dim=-1)
+        w_ = self.attn_drop(w_)
+
+        # attend to values
+        h_ = w_ @ v  # b, nh, l, hs
+        h_ = h_ \
+            .transpose(1, 2) \
+            .reshape(-1, l, self.emb_dim) \
+            .contiguous() # b, l, nh*hs
+        h_ = self.resid_drop(self.proj_out(h_))
+        return h_

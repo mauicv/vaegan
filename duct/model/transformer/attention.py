@@ -3,11 +3,12 @@ import torch.nn as nn
 
 
 class AttnBlock(nn.Module):
-    def __init__(self, emb_dim, n_heads=1):
+    def __init__(self, emb_dim, block_size, n_heads=1):
         super().__init__()
         assert emb_dim % n_heads == 0
         self.n_heads = n_heads
         self.emb_dim = emb_dim
+        self.block_size = block_size
         self.norm = nn.LayerNorm(emb_dim)
         self.q = torch.nn.Linear(emb_dim, emb_dim)
         self.k = torch.nn.Linear(emb_dim, emb_dim)
