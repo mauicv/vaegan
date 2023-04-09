@@ -16,7 +16,10 @@ setup(
         'duct.model.samplers',
     ],
     install_requires=[
-        "torch>=1.7.0, <1.14.0",
-        "toml>=0.10.1, <1.0.0"
+        "torch==1.13.1",
+        "toml==0.10.2",
+        "torchaudio==0.13.1",
+        "torchvision==0.14.1",
+        "einops==0.6.0"
     ],
 )
