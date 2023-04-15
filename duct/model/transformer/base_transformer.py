@@ -16,6 +16,18 @@ class BaseTransformer():
             module.weight.data.fill_(1.0)
 
     def get_weight_decay_params(self):
+        """Gets and returns parameters from the model that require weight decay and
+        those that don't.
+
+        Note: When reloading a optimizer from a checkpoint, the parameters must be
+        ordered in the same way as they were when the optimizer was originally saved.
+        Not doing so will cause shape mismatches and mess up the training restart. 
+        This is in large part what this function does.
+
+        Returns:
+            Tuple[List]: Two lists of parameters, the first is those with decay,
+            the second those without.
+        """
         decay_params = {}
         no_decay_params = {}
         whitelist_weight_modules = (torch.nn.Linear, )
