@@ -18,10 +18,14 @@ def test_autoencoding_transformer(n_heads):
         n_heads=n_heads,
         emb_dim=64,
         emb_num=10,
-        encoder_depth=5,
-        decoder_depth=5,
         block_size=20,
-        n_concepts=10)
+        n_concepts=10,
+        encoder_depth=5,
+        encoder_width=40,
+        decoder_depth=5,
+        decoder_width=20,
+    )
     x = torch.randint(0, 10, (64, 20))
-    y = transformer(x)
-    assert y.shape == (64, 20, 10)  # (batch_size, block_size, emb_num)
+    y = torch.randint(0, 10, (64, 40))
+    x_logits = transformer(x, y)
+    assert x_logits.shape == (64, 20, 10)  # (batch_size, block_size, emb_num)

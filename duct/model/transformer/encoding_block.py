@@ -4,6 +4,7 @@ import torch.nn as nn
 
 import torch
 from torch import nn
+from torch.nn import Parameter
 
 class ConceptEncodingBlock(nn.Module):
 		def __init__(self, m, emb_dim, n_heads):
@@ -16,8 +17,8 @@ class ConceptEncodingBlock(nn.Module):
 			self.cells = torch.zeros(self.m, self.n_heads, self.head_size)
 			self.cells.data.uniform_(-1/self.m, 1/self.m)
 			self.q = torch.nn.Linear(emb_dim, emb_dim)
-			self.v = torch.randn(self.m, emb_dim, emb_dim)
-			# self.vb = torch.randn(self.m, emb_dim)
+			self.v = Parameter(torch.randn(self.m, emb_dim, emb_dim))
+			# self.vb = Parameter(torch.randn(self.m, emb_dim))
 			self.norm = nn.LayerNorm(emb_dim)
 			self.attn_drop = nn.Dropout(0.1)
 			# self.resid_drop = nn.Dropout(0.1)

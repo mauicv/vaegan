@@ -12,22 +12,28 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
             block_size, 
             n_heads=1, 
             encoder_depth=5,
+            encoder_width=1024,
             decoder_depth=5,
+            decoder_width=512,
             n_concepts=256
         ):
         super().__init__()
-        BaseTransformer.__init__(self)
 
         self.block_size = block_size
         self.emb_num = emb_num
         self.emb_dim = emb_dim
+        self.encoder_width = encoder_width
         self.encoder_depth = encoder_depth
+        self.decoder_width = decoder_width
         self.decoder_depth = decoder_depth
         self.n_heads = n_heads
         self.n_concepts = n_concepts
 
         self.tok_emb = nn.Embedding(emb_num, emb_dim)
-        self.pos_emb = nn.Embedding(block_size, emb_dim)
+        self.pos_emb = nn.Embedding(
+            max(self.encoder_width, self.decoder_width), 
+            emb_dim
+        )
 
         self.encoder = Encoder(
             emb_dim,
@@ -47,10 +53,10 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
         )
         
         self.drop = nn.Dropout(0.1)
-
+        self.linear = nn.Linear(emb_dim, emb_num)
         self.apply(self._init_weights)
 
-    def forward(self, x, mask=None):
+    def preprocess(self, x):
         x = self.tok_emb(x)
         _, l, _ = x.shape
         pos = torch.arange(0, l, dtype=torch.long, device=x.device)
@@ -58,8 +64,15 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
         if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
         x = x + pos_emb
         x = self.drop(x)
-        enc = self.encoder(x)
-        return self.decoder(x, enc=enc, mask=mask)
+        return x
+
+    def forward(self, x, y, mask=None):
+        y = self.preprocess(y)
+        x = self.preprocess(x)
+        y = self.encoder(y)
+        x = self.decoder(x, enc=y, mask=mask)
+        logits = self.linear(x)
+        return logits
 
 
 class Decoder(nn.Module, BaseTransformer):
@@ -72,7 +85,6 @@ class Decoder(nn.Module, BaseTransformer):
             depth=5,
         ):
         super().__init__()
-        BaseTransformer.__init__(self)
 
         self.block_size = block_size
         self.emb_num = emb_num
@@ -88,17 +100,12 @@ class Decoder(nn.Module, BaseTransformer):
                 n_heads=n_heads,
             )
             self.layers.append(transformer_block)
-        
-        self.linear = nn.Linear(emb_dim, emb_num)
-        self.drop = nn.Dropout(0.1)
         self.apply(self._init_weights)
 
     def forward(self, x, enc, mask=None):
-        x = self.drop(x)
         for layer in self.layers:
             x = layer(x, enc=enc, mask=mask)
-        logits = self.linear(x)
-        return logits
+        return x
 
 
 class Encoder(nn.Module, BaseTransformer):
@@ -112,7 +119,6 @@ class Encoder(nn.Module, BaseTransformer):
             n_concepts=256
         ):
         super().__init__()
-        BaseTransformer.__init__(self)
 
         self.block_size = block_size
         self.emb_num = emb_num
@@ -137,7 +143,6 @@ class Encoder(nn.Module, BaseTransformer):
         self.apply(self._init_weights)
 
     def forward(self, seq):
-        _, l, emb_dim = seq.shape
         for layer in self.layers:
             seq = layer(seq)
         seq = self.concept_block(seq)
