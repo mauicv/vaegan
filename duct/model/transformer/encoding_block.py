@@ -14,7 +14,7 @@ class ConceptEncodingBlock(nn.Module):
 			self.n_heads = n_heads
 			self.emb_dim = emb_dim
 			self.head_size = self.emb_dim // self.n_heads
-			self.cells = torch.zeros(self.m, self.n_heads, self.head_size)
+			self.cells = Parameter(torch.zeros(self.m, self.n_heads, self.head_size))
 			self.cells.data.uniform_(-1/self.m, 1/self.m)
 			self.q = torch.nn.Linear(emb_dim, emb_dim)
 			self.v = Parameter(torch.randn(self.m, emb_dim, emb_dim))
