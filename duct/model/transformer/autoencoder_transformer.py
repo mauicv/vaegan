@@ -9,7 +9,6 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
             self, 
             emb_dim, 
             emb_num, 
-            block_size, 
             n_heads=1, 
             encoder_depth=5,
             encoder_width=1024,
@@ -19,7 +18,6 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
         ):
         super().__init__()
 
-        self.block_size = block_size
         self.emb_num = emb_num
         self.emb_dim = emb_dim
         self.encoder_width = encoder_width
@@ -38,7 +36,7 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
         self.encoder = Encoder(
             emb_dim,
             emb_num,
-            block_size,
+            encoder_width,
             n_heads=n_heads,
             depth=encoder_depth,
             n_concepts=n_concepts
@@ -47,7 +45,7 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
         self.decoder = Decoder(
             emb_dim,
             emb_num,
-            block_size,
+            decoder_width,
             n_heads=n_heads,
             depth=decoder_depth,
         )
@@ -56,7 +54,7 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
         self.linear = nn.Linear(emb_dim, emb_num)
         self.apply(self._init_weights)
 
-    def preprocess(self, x):
+    def _preprocess(self, x):
         x = self.tok_emb(x)
         _, l, _ = x.shape
         pos = torch.arange(0, l, dtype=torch.long, device=x.device)
@@ -67,9 +65,12 @@ class AutoEncodingTransformer(nn.Module, BaseTransformer):
         return x
 
     def forward(self, x, y, mask=None):
-        y = self.preprocess(y)
-        x = self.preprocess(x)
-        y = self.encoder(y)
+        x = self._preprocess(x)
+        b, _ = y.shape
+        y = y.reshape(-1, self.encoder_width)
+        y = self._preprocess(y)
+        y = self.encoder(y) # (b*e, n, e_w)
+        y = y.reshape(b, self.encoder.n_concepts, self.emb_dim, -1).sum(-1)
         x = self.decoder(x, enc=y, mask=mask)
         logits = self.linear(x)
         return logits
@@ -120,6 +121,7 @@ class Encoder(nn.Module, BaseTransformer):
         ):
         super().__init__()
 
+        self.n_concepts = n_concepts
         self.block_size = block_size
         self.emb_num = emb_num
         self.emb_dim = emb_dim
