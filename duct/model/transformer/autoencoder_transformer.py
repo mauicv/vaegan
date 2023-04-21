@@ -2,6 +2,74 @@ import torch
 import torch.nn as nn
 from duct.model.transformer.block import TransformerBlock, ConceptBlock, DecoderTransformerBlock
 from duct.model.transformer.base_transformer import BaseTransformer
+from duct.model.transformer.relative_attention import SkewedRelAttnBlock
+
+
+class ARPTransformer(nn.Module, BaseTransformer):
+    def __init__(
+            self, 
+            emb_dim, 
+            emb_num, 
+            n_heads=1, 
+            encoder_depth=5,
+            encoder_width=1024,
+            decoder_depth=5,
+            decoder_width=512,
+            n_concepts=256,
+            attn_block=SkewedRelAttnBlock
+        ):
+        super().__init__()
+
+        self.emb_num = emb_num
+        self.emb_dim = emb_dim
+        self.encoder_width = encoder_width
+        self.encoder_depth = encoder_depth
+        self.decoder_width = decoder_width
+        self.decoder_depth = decoder_depth
+        self.n_heads = n_heads
+        self.n_concepts = n_concepts
+
+        self.tok_emb = nn.Embedding(emb_num, emb_dim)
+
+        self.encoder = Encoder(
+            emb_dim,
+            emb_num,
+            encoder_width,
+            n_heads=n_heads,
+            depth=encoder_depth,
+            n_concepts=n_concepts,
+            attn_block=attn_block,
+        )
+
+        self.decoder = Decoder(
+            emb_dim,
+            emb_num,
+            decoder_width,
+            n_heads=n_heads,
+            depth=decoder_depth,
+            attn_block=attn_block,
+        )
+        
+        self.drop = nn.Dropout(0.1)
+        self.linear = nn.Linear(emb_dim, emb_num)
+        self.apply(self._init_weights)
+
+    def _preprocess(self, x):
+        x = self.tok_emb(x)
+        _, l, _ = x.shape
+        x = self.drop(x)
+        return x
+
+    def forward(self, x, y, mask=None):
+        x = self._preprocess(x)
+        b, _ = y.shape
+        y = y.reshape(-1, self.encoder_width)
+        y = self._preprocess(y)
+        y = self.encoder(y) # (b*e, n, e_w)
+        y = y.reshape(b, self.encoder.n_concepts, self.emb_dim, -1).sum(-1)
+        x = self.decoder(x, enc=y, mask=mask)
+        logits = self.linear(x)
+        return logits
 
 
 class AutoEncodingTransformer(nn.Module, BaseTransformer):
@@ -84,6 +152,7 @@ class Decoder(nn.Module, BaseTransformer):
             block_size, 
             n_heads=1, 
             depth=5,
+            attn_block=SkewedRelAttnBlock
         ):
         super().__init__()
 
@@ -99,6 +168,7 @@ class Decoder(nn.Module, BaseTransformer):
                 emb_dim, 
                 self.block_size,
                 n_heads=n_heads,
+                attn_block=attn_block
             )
             self.layers.append(transformer_block)
         self.apply(self._init_weights)
@@ -117,7 +187,8 @@ class Encoder(nn.Module, BaseTransformer):
             block_size, 
             n_heads=1, 
             depth=5,
-            n_concepts=256
+            n_concepts=256,
+            attn_block=SkewedRelAttnBlock
         ):
         super().__init__()
 
@@ -133,6 +204,7 @@ class Encoder(nn.Module, BaseTransformer):
                 emb_dim, 
                 self.block_size,
                 n_heads=n_heads,
+                attn_block=attn_block
             )
             self.layers.append(transformer_block)
 

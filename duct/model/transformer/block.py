@@ -38,7 +38,7 @@ class DecoderTransformerBlock(nn.Module):
             block_size,
             n_heads=n_heads,
         )
-        self.cross_attn = attn_block(
+        self.cross_attn = AttnBlock(
             emb_dim, 
             block_size,
             n_heads=n_heads,
