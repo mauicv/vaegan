@@ -18,10 +18,9 @@ class ConceptEncodingBlock(nn.Module):
 			self.cells.data.uniform_(-1/self.m, 1/self.m)
 			self.q = torch.nn.Linear(emb_dim, emb_dim)
 			self.v = Parameter(torch.randn(self.m, emb_dim, emb_dim))
-			# self.vb = Parameter(torch.randn(self.m, emb_dim))
+			self.vb = Parameter(torch.randn(self.m, emb_dim))
 			self.norm = nn.LayerNorm(emb_dim)
 			self.attn_drop = nn.Dropout(0.1)
-			# self.resid_drop = nn.Dropout(0.1)
 
 		def forward(self, x):
 			_, l, _ = x.shape
@@ -31,6 +30,7 @@ class ConceptEncodingBlock(nn.Module):
 				.transpose(1,2) # b, nh, l, hs
 			v_ = torch.einsum('mwv,blv->bmlw', self.v, h_) \
 					.reshape(-1, self.m, l, self.n_heads, self.head_size) # b, m, l, nh, hs
+			v_ = v_ + self.vb.reshape(1, self.m, 1, self.n_heads, self.head_size) # b, m, l, nh, hs
 
 			# compute attention
 			w_ = torch.einsum('bhlv,mhv->bhml', q, self.cells) # b, nh, m, l
@@ -44,6 +44,5 @@ class ConceptEncodingBlock(nn.Module):
 				.transpose(1, 2) \
 				.reshape(-1, self.m, self.emb_dim) \
 				.contiguous() # b, n, nh*hs
-			# h_ = self.resid_drop(self.proj_out(h_))
 
 			return h_
