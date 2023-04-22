@@ -3,7 +3,7 @@ from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncod
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 from duct.model.transformer.model import Transformer, RelEmbTransformer
-from duct.model.transformer.autoencoder_transformer import AutoEncodingTransformer
+from duct.model.transformer.autoencoder_transformer import AutoEncodingTransformer, ARPTransformer
 
 
 
@@ -20,6 +20,7 @@ class ModelRegistry:
             'Transformer': Transformer,
             'RelEmbTransformer': RelEmbTransformer,
             'AutoEncodingTransformer': AutoEncodingTransformer,
+            'ARPTransformer': ARPTransformer,
         }
 
     def __getitem__(self, item):

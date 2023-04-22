@@ -1,7 +1,7 @@
 import pytest
 import torch
 from duct.model.transformer.encoding_block import ConceptEncodingBlock
-from duct.model.transformer.autoencoder_transformer import AutoEncodingTransformer
+from duct.model.transformer.autoencoder_transformer import AutoEncodingTransformer, ARPTransformer
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
@@ -25,14 +25,14 @@ def test_autoencoding_transformer(n_heads):
         decoder_width=20,
     )
     x = torch.randint(0, 10, (64, 20))
-    y = torch.randint(0, 10, (64, 40))
+    y = torch.randint(0, 10, (64, 120))
     x_logits = transformer(x, y)
     assert x_logits.shape == (64, 20, 10)  # (batch_size, block_size, emb_num)
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
-def test_autoencoding_transformer_2(n_heads):
-    transformer = AutoEncodingTransformer(
+def test_autoencoding_relative_position_transformer(n_heads):
+    transformer = ARPTransformer(
         n_heads=n_heads,
         emb_dim=64,
         emb_num=10,

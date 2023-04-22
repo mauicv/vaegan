@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from duct.model.transformer.block import TransformerBlock, ConceptBlock, DecoderTransformerBlock
 from duct.model.transformer.base_transformer import BaseTransformer
-from duct.model.transformer.relative_attention import SkewedRelAttnBlock
+from duct.model.transformer.relative_attention import SkewedRelAttnBlock, RelAttnBlock
 
 
 class ARPTransformer(nn.Module, BaseTransformer):
@@ -16,9 +16,13 @@ class ARPTransformer(nn.Module, BaseTransformer):
             decoder_depth=5,
             decoder_width=512,
             n_concepts=256,
-            attn_block=SkewedRelAttnBlock
+            attention_type='skewed'
         ):
         super().__init__()
+        if attention_type == 'skewed':
+            attn_block = SkewedRelAttnBlock
+        else:
+            attn_block = RelAttnBlock
 
         self.emb_num = emb_num
         self.emb_dim = emb_dim
