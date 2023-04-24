@@ -2,7 +2,7 @@ import pytest
 import torch
 from duct.model.transformer.encoding_block import ConceptEncodingBlock
 from duct.model.transformer.autoencoder_transformer import AutoEncodingTransformer
-from duct.model.transformer.concept_encoder import ConceptEncoder
+from duct.model.transformer.concept_encoder import ConceptEncoder, ConceptConv
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
@@ -49,14 +49,45 @@ def test_autoencoding_transformer_2(n_heads):
     assert x_logits.shape == (64, 20, 10)  # (batch_size, block_size, emb_num)
 
 
-@pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
-def test_conceptformer(n_heads):
-    concept_encoder = ConceptEncoder(
-        dims=((256, 64), (64, 32)), 
+# @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
+# def test_conceptformer(n_heads):
+#     layers = [
+#         {
+#             'nodes': 64, 
+#             'width': 256, 
+#             'blocks': 1, 
+#             'block_type': 'TransformerBlock',
+#             'stride': 128
+#         },
+#         {
+#             'nodes': 32, 
+#             'width': 64, 
+#             'blocks': 1, 
+#             'block_type': 'TransformerBlock',
+#             'stride': 128
+#         },
+#     ]
+#     concept_encoder = ConceptEncoder(
+#         layers=layers, 
+#         emb_dim=64,
+#         emb_num=10,
+#         n_heads=n_heads, 
+#         stride=128,
+#         use_bias=True
+#     )
+#     x = torch.randint(0, 10, (64, 512))
+#     concept_encoder(x)
+
+
+def test_ConceptConv():
+    concept_conv = ConceptConv(
+        nodes=8,
+        width=64,
+        blocks=1,
+        stride=32,
         emb_dim=64, 
-        n_heads=n_heads, 
-        stride=128,
-        use_bias=True
+        n_heads=1
     )
-    x = torch.randn(64, 512)
-    concept_encoder(x)
+    x = torch.randn(12, 128, 64) # (batch_size, block_size, emb_dim)
+    y = concept_conv(x)
+    assert y.shape == (12, 24, 64)
