@@ -16,65 +16,79 @@ from duct.model.transformer.relative_attention import RelAttnBlock, SkewedRelAtt
 class ConceptEncoder(nn.Module):
 	def __init__(
 			self,
-			layers, # [{'nodes': ..., 'width': ..., 'blocks': ..., 'block_type': ''},...]
+			layers, # [{'nodes': ..., 'width': ..., 'stride': ...},...]
 			emb_dim,
 			n_heads,
 			emb_num,
-			stride=1,
 			use_bias=True):
 		super().__init__()
 		assert emb_dim % n_heads == 0
 		self.emb_dim = emb_dim
-		self.layers = layers
-		self.widths = [w for (_, w) in layers]
+		self.layers_params = layers
+		self.drop = nn.Dropout(0.1)
 		self.tok_emb = nn.Embedding(emb_num, emb_dim)
+		self.linear = torch.nn.Linear(emb_dim, emb_num)
 		self.layers = torch.nn.ModuleList()
-		for (m, _) in layers:
-			block = ConceptBlock(m, emb_dim, n_heads, use_bias=use_bias)
+		for layer in layers:
+			block = ConceptConv(
+				**layer,
+				emb_dim=emb_dim,
+				n_heads=n_heads,
+				use_bias=use_bias
+			)
 			self.layers.append(block)
 
-
 	def forward(self, x):
-		b, _ = x.shape
 		x = self.tok_emb(x)
-		print(x.shape)
-		for block, width in zip(self.layers, self.widths):
-			x = x.reshape(-1, width, self.emb_dim)
-			print(width, x.shape)
-			x = block(x).reshape(b, -1, self.emb_dim)
-			print(width, x.shape)
-		# x = c_emb_1(x)
-		return x
+		x = self.drop(x)
+		for layer in self.layers:
+			x = layer(x)
+		logits = self.linear(x)
+		return logits
 
 
 class ConceptConv(nn.Module):
-	def __init__(self, nodes, width, blocks, stride, emb_dim, n_heads, attn_type='attn') -> None:
+	def __init__(
+				self,
+				nodes,
+				width,
+				stride,
+				emb_dim,
+				n_heads,
+				blocks=1,
+				attn_type='attn',
+				use_bias=True,
+			) -> None:
 		super().__init__()
 		self.emb_dim = emb_dim
 		self.nodes = nodes
 		self.width = width
-		self.blocks = blocks
 		attn_block = {
 			'attn': AttnBlock,
 			'rel_attn': RelAttnBlock,
 			'skewed_rel_attn': SkewedRelAttnBlock
 		}[attn_type]
 		self.stride = stride
-		self.concept_block = ConceptBlock(emb_dim, nodes, n_heads=n_heads)
+		self.concept_block = ConceptBlock(
+			use_bias=use_bias,
+			n_heads=n_heads,
+			emb_dim=emb_dim,
+			n_concepts=nodes,
+		)
 		self.blocks = nn.ModuleList()
 		for _ in range(blocks):
 			block = TransformerBlock(
-				emb_dim=emb_dim, 
-				n_heads=n_heads, 
 				attn_block=attn_block,
 				block_size=width,
+				emb_dim=emb_dim, 
+				n_heads=n_heads, 
 			)
 			self.blocks.append(block)
 
 		self.unfold = nn.Unfold(kernel_size=(1, width), stride=1)
 
 	def forward(self, x):
-		b, l, c = x.shape
+		b, _, _ = x.shape
 		x = x.permute(0, 2, 1) # (b, c, l)
 		x_unfolded = x \
 			.unfold(-1, self.width, self.stride) \

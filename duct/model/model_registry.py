@@ -4,6 +4,7 @@ from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 from duct.model.transformer.model import Transformer, RelEmbTransformer
 from duct.model.transformer.autoencoder_transformer import AutoEncodingTransformer
+from duct.model.transformer.concept_encoder import ConceptEncoder
 
 
 
@@ -20,6 +21,7 @@ class ModelRegistry:
             'Transformer': Transformer,
             'RelEmbTransformer': RelEmbTransformer,
             'AutoEncodingTransformer': AutoEncodingTransformer,
+            'ConceptEncoder': ConceptEncoder,
         }
 
     def __getitem__(self, item):
