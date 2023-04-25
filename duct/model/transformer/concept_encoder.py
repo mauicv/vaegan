@@ -24,6 +24,7 @@ class ConceptEncoder(nn.Module):
 		super().__init__()
 		assert emb_dim % n_heads == 0
 		self.emb_dim = emb_dim
+		self.emb_num = emb_num
 		self.layers_params = layers
 		self.drop = nn.Dropout(0.1)
 		self.tok_emb = nn.Embedding(emb_num, emb_dim)

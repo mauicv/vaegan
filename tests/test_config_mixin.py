@@ -4,8 +4,10 @@ from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncod
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 from duct.model.transformer.model import Transformer, RelEmbTransformer
+from duct.model.transformer.concept_encoder import ConceptEncoder
 from torch.optim import Adam, AdamW
 import pytest
+import torch
 
 
 class Experiment(ConfigMixin):
@@ -188,3 +190,21 @@ def test_util_mixin_transformer(tmp_path):
     path = tmp_path / 'model.pt'
     exp.save_state(path)
     exp.load_state(path)
+
+
+def test_util_mixin_concept_transformer(tmp_path):
+    exp = Experiment.from_file(path='./tests/test_configs/concept_transformer.toml')
+    assert isinstance(exp.transformer, ConceptEncoder)
+    assert isinstance(exp.transformer_opt, AdamW)
+
+    assert exp.transformer.emb_dim == 64
+    assert exp.transformer.emb_num == 10
+    assert len(exp.transformer.layers) == 3
+
+    path = tmp_path / 'model.pt'
+    exp.save_state(path)
+    exp.load_state(path)
+
+    x = torch.randint(0, 10, (1, 5 * 512))
+    y = exp.transformer(x)
+    assert y.shape == (1, 64, 10)

@@ -1,0 +1,26 @@
+[transformer]
+class = 'ConceptEncoder'
+emb_dim=64
+emb_num=10
+n_heads=8
+use_bias=true
+
+[[transformer.layers]]
+nodes=256
+width=1024
+stride=512
+
+[[transformer.layers]]
+nodes=128
+width=512
+stride=512
+
+[[transformer.layers]]
+nodes=64
+width=256
+stride=256
+
+[[transformer.opt_cfgs]]
+class = 'AdamW'
+name = 'transformer_opt'
+lr = 0.0005
