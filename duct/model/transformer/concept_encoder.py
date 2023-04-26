@@ -10,10 +10,11 @@ import torch.nn as nn
 from torch import nn
 from duct.model.transformer.block import ConceptBlock, TransformerBlock
 from duct.model.transformer.attention import AttnBlock
-from duct.model.transformer.relative_attention import RelAttnBlock, SkewedRelAttnBlock 
+from duct.model.transformer.relative_attention import RelAttnBlock, SkewedRelAttnBlock
+from duct.model.transformer.base_transformer import BaseTransformer
 
 
-class ConceptEncoder(nn.Module):
+class ConceptEncoder(nn.Module, BaseTransformer):
 	def __init__(
 			self,
 			layers, # [{'nodes': ..., 'width': ..., 'stride': ...},...]

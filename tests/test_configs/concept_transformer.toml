@@ -23,4 +23,5 @@ stride=256
 [[transformer.opt_cfgs]]
 class = 'AdamW'
 name = 'transformer_opt'
+parameter_set = 'get_parameter_groups'
 lr = 0.0005
