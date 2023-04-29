@@ -3,9 +3,9 @@ class = 'AutoEncodingTransformer'
 n_heads = 8
 emb_dim = 256
 emb_num = 10
-encoder_depth = 3
+encoder_depth = 1
 encoder_width = 512
-decoder_depth = 7
+decoder_depth = 3
 decoder_width = 512
 n_concepts = 128
 
