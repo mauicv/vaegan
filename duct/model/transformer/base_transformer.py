@@ -41,6 +41,12 @@ class BaseTransformer():
                     decay_params[fpn] = param
                 elif 'weight' in pn and isinstance(module, blacklist_weight_modules):
                     no_decay_params[fpn] = param
+                elif 'concept_block' in pn and {'cells', 'v_weights'}.intersection(pn.split('.')):
+                    decay_params[fpn] = param
+                elif 'concept_block' in pn and {'v_basis'}.intersection(pn.split('.')):
+                    no_decay_params[fpn] = param
+                elif 'Er' in pn:
+                    no_decay_params[fpn] = param
 
         # sort by name to ensure consistent ordering on reload
         decay_params = sorted(decay_params.items(), key=lambda x: x[0])
