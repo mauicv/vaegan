@@ -15,6 +15,15 @@ def test_attn_block(n_heads):
     assert y.shape == x.shape
 
 
+@pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
+def test_cross_attn_block(n_heads):
+    attn_block = AttnBlock(emb_dim=64, block_size=128, n_heads=n_heads)
+    x = torch.randn(64, 128, 64)
+    enc = torch.randn(64, 32, 64)
+    y = attn_block(x, enc=enc)
+    assert y.shape == x.shape
+
+
 @pytest.mark.parametrize("n_heads", [4])
 def test_rel_attn_block(n_heads):
     attn_block = SkewedRelAttnBlock(

@@ -18,23 +18,25 @@ class AttnBlock(nn.Module):
         self.attn_drop = nn.Dropout(0.1)
         self.resid_drop = nn.Dropout(0.1)
 
-    def forward(self, x, mask=None):
-        _, l, _ = x.shape
+    def forward(self, x, enc=None, mask=None):
+        b, l, _ = x.shape
         h_ = x
+        if enc is None: enc = h_
         h_ = self.norm(h_)
-        tensor_shape = (-1, l, self.n_heads, self.head_size)
+        enc = self.norm(enc)
+        tensor_shape = (b, -1, self.n_heads, self.head_size)
         q = self.q(h_) \
             .reshape(*tensor_shape) \
-            .transpose(1,2) # b, nh, l, hs
-        k = self.k(h_) \
+            .transpose(1,2) # b, nh, l2, hs
+        k = self.k(enc) \
             .reshape(*tensor_shape) \
-            .transpose(1,2) # b, nh, l, hs
-        v = self.v(h_) \
+            .transpose(1,2) # b, nh, l2, hs
+        v = self.v(enc) \
             .reshape(*tensor_shape)\
-            .transpose(1,2) # b, nh, l, hs
+            .transpose(1,2) # b, nh, l1, hs
 
         # compute attention
-        w_ = q @ k.transpose(2,3) # b, nh, l, l
+        w_ = q @ k.transpose(2,3) # b, nh, l1, l2
         w_ = w_ * (int(self.head_size)**(-0.5))
 
         if mask is not None:
