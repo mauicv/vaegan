@@ -1,0 +1,16 @@
+[transformer]
+class = 'AutoEncodingTransformer'
+n_heads = 8
+emb_dim = 256
+emb_num = 10
+encoder_depth = 1
+encoder_width = 512
+decoder_depth = 3
+decoder_width = 512
+n_concepts = 128
+
+[[transformer.opt_cfgs]]
+class = 'AdamW'
+name = 'transformer_opt'
+parameter_set = 'get_parameter_groups'
+lr = 0.0005

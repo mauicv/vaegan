@@ -4,6 +4,7 @@ from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncod
 from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 from duct.model.transformer.model import Transformer, RelEmbTransformer
+from duct.model.transformer.autoencoder_transformer import AutoEncodingTransformer
 from torch.optim import Adam, AdamW
 import pytest
 
@@ -30,7 +31,6 @@ def test_util_mixin_nll_vae(tmp_path):
 
 def test_util_mixin_vq_vae(tmp_path):
     a = Experiment.from_file(path='./tests/test_configs/vq_vae.toml')
-    print(a.vae)
     assert a.vae.encoder.nc == 3
     assert isinstance(a.vae, VQVarAutoEncoder)
     assert isinstance(a.vae_enc_opt, Adam)
@@ -184,6 +184,20 @@ def test_util_mixin_transformer(tmp_path):
     assert exp.transformer.emb_dim == 256
     assert exp.transformer.emb_num == 10
     assert exp.transformer.depth == 5
+
+    path = tmp_path / 'model.pt'
+    exp.save_state(path)
+    exp.load_state(path)
+
+
+def test_util_mixin_transformer(tmp_path):
+    exp = Experiment.from_file(path='./tests/test_configs/ae_transformer.toml')
+    assert isinstance(exp.transformer, AutoEncodingTransformer)
+    assert isinstance(exp.transformer_opt, AdamW)
+
+    assert exp.transformer.n_heads == 8
+    assert exp.transformer.emb_dim == 256
+    assert exp.transformer.emb_num == 10
 
     path = tmp_path / 'model.pt'
     exp.save_state(path)

@@ -58,7 +58,7 @@ class DecoderTransformerBlock(nn.Module):
 
 
 class ConceptBlock(nn.Module):
-    def __init__(self, emb_dim, n_concepts, n_heads=1, concept_block=ConceptEncodingBlock):
+    def __init__(self, emb_dim, n_concepts, n_heads=1, concept_block=ConceptEncodingBlock, use_bias=True):
         super().__init__()
         self.emb_dim = emb_dim
         self.ln1 = nn.LayerNorm(emb_dim)
@@ -67,6 +67,7 @@ class ConceptBlock(nn.Module):
             n_concepts,
             emb_dim=emb_dim,
             n_heads=n_heads,
+            use_bias=use_bias
         )
         self.mlp = nn.Sequential(
             nn.Linear(emb_dim, 4 * emb_dim),
