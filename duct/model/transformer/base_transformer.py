@@ -47,7 +47,6 @@ class BaseTransformer():
         all_params_set = set([n for n, _ in self.named_parameters()])
         decay_params_set = set(decay_params.keys())
         no_decay_params_set = set(no_decay_params.keys())
-        print(all_params_set.symmetric_difference(decay_params_set.union(no_decay_params_set)))
         assert all_params_set == decay_params_set.union(no_decay_params_set)
         assert not decay_params_set.intersection(no_decay_params_set)
 
