@@ -45,13 +45,10 @@ class BaseTransformer():
                     decay_params[fpn] = param
                 elif 'concept_block' in pn and {'v_basis'}.intersection(pn.split('.')):
                     no_decay_params[fpn] = param
+                elif 'Er' in pn:
+                    no_decay_params[fpn] = param
 
         # sort by name to ensure consistent ordering on reload
-        print(set([n for n, _ in self.named_parameters()]) \
-            .symmetric_difference(set([n for n in decay_params]).union(set([n for n in no_decay_params]))))
-        # {'layers.3.attn.Er', 'layers.2.attn.Er', 'layers.0.attn.Er', 'layers.4.attn.Er', 'layers.1.attn.Er'}
-        # {'layers.1.attn.Er', 'layers.4.attn.Er', 'layers.0.attn.Er', 'layers.2.attn.Er', 'layers.3.attn.Er'}
-        
         decay_params = sorted(decay_params.items(), key=lambda x: x[0])
         decay_params = [p for _, p in decay_params]
         no_decay_params = sorted(no_decay_params.items(), key=lambda x: x[0])
