@@ -21,7 +21,7 @@ def test_saving_1(tmp_path):
     imgs_2 = test_class.vae.call(imgs_1)
     assert imgs_1.shape == imgs_2.shape
 
-    test_class.save_state(tmp_path / 'model.pt')
+    test_class.save_state(tmp_path)
     test_class.save_training_artifacts(imgs_1, imgs_2)
 
 
@@ -45,7 +45,7 @@ def test_saving_2(tmp_path):
     imgs_2 = test_class.vae.call(imgs_1)
     assert imgs_1.shape == imgs_2.shape
 
-    test_class.save_state(tmp_path / 'model.pt')
+    test_class.save_state(tmp_path)
     test_class.save_training_artifacts(imgs_1, imgs_2)
 
 
@@ -70,7 +70,7 @@ def test_saving_1d_vqvae(tmp_path):
     aud_2 = test_class.vae.call(aud_1)
     assert aud_1.shape == aud_2.shape
 
-    test_class.save_state(tmp_path / 'model.pt')
+    test_class.save_state(tmp_path)
     # test_class.save_training_artifacts(aud_1, aud_2)
 
 
@@ -94,13 +94,12 @@ def test_exp_transformer(tmp_path):
     output_probs = test_class.transformer(seq)
     assert output_probs.shape == (64, 100, 10)
 
-    test_class.save_state(tmp_path / 'model.pt')
-    test_class.load_state(tmp_path / 'model.pt')
+    test_class.save_state(tmp_path)
+    test_class.load_state(tmp_path)
     # test_class.save_training_artifacts(aud_1, aud_2)
 
 
 def test_rel_emb_transformer(tmp_path):
-    # tmp_path = './test_path'
     (tmp_path / 'test').mkdir()
     shutil.copyfile('./tests/test_configs/rel_emb_transformer.toml', str(tmp_path / 'test' / 'config.toml'))
 
@@ -119,6 +118,6 @@ def test_rel_emb_transformer(tmp_path):
     output_probs = test_class.transformer(seq)
     assert output_probs.shape == (64, 100, 10)
 
-    test_class.save_state(tmp_path / 'model.pt')
-    test_class.load_state(tmp_path / 'model.pt')
+    test_class.save_state(tmp_path)
+    test_class.load_state(tmp_path)
     # test_class.save_training_artifacts(aud_1, aud_2)

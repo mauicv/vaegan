@@ -5,6 +5,8 @@ from duct.model.critic import Critic
 from duct.model.patch_critic import NLayerDiscriminator
 from duct.model.transformer.model import Transformer, RelEmbTransformer
 from torch.optim import Adam, AdamW
+from freezegun import freeze_time
+import os
 import pytest
 
 
@@ -22,36 +24,28 @@ def test_util_mixin_nll_vae(tmp_path):
     assert isinstance(a.vae_enc_opt, Adam)
     assert isinstance(a.vae_dec_opt, Adam)
     assert a.optimizers == ['vae_enc_opt', 'vae_dec_opt']
-
-    path = tmp_path / 'model.pt'
-    a.save_state(path)
-    a.load_state(path)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
 
 
 def test_util_mixin_vq_vae(tmp_path):
     a = Experiment.from_file(path='./tests/test_configs/vq_vae.toml')
-    print(a.vae)
     assert a.vae.encoder.nc == 3
     assert isinstance(a.vae, VQVarAutoEncoder)
     assert isinstance(a.vae_enc_opt, Adam)
     assert isinstance(a.vae_dec_opt, Adam)
     assert a.optimizers == ['vae_enc_opt', 'vae_dec_opt']
-
-    path = tmp_path / 'model.pt'
-    a.save_state(path)
-    a.load_state(path)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
 
 
 def test_util_mixin_vae(tmp_path):
     a = Experiment.from_file(path='./tests/test_configs/vae.toml')
     assert a.vae.encoder.nc == 3
     assert isinstance(a.vae, VarAutoEncoder)
-    with pytest.raises(KeyError):
-        assert a.vae_opt
-
-    path = tmp_path / 'model.pt'
-    a.save_state(path)
-    a.load_state(path)
+    assert a.vae_opt == None
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
 
 
 def test_util_mixin_ae(tmp_path):
@@ -59,10 +53,8 @@ def test_util_mixin_ae(tmp_path):
     assert a.ae.encoder.nc == 3
     assert isinstance(a.ae, AutoEncoder)
     assert isinstance(a.ae_opt, Adam)
-
-    path = tmp_path / 'model.pt'
-    a.save_state(path)
-    a.load_state(path)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
 
 
 def test_util_mixin_critic(tmp_path):
@@ -70,20 +62,16 @@ def test_util_mixin_critic(tmp_path):
     assert a.critic.encoder.nc == 3
     assert isinstance(a.critic, Critic)
     assert isinstance(a.critic_opt, Adam)
-
-    path = tmp_path / 'model.pt'
-    a.save_state(path)
-    a.load_state(path)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
 
 
 def test_util_mixin_patch_critic(tmp_path):
     a = Experiment.from_file(path='./tests/test_configs/patch_critic.toml')
     assert isinstance(a.patch_critic, NLayerDiscriminator)
     assert isinstance(a.patch_critic_opt, Adam)
-
-    path = tmp_path / 'model.pt'
-    a.save_state(path)
-    a.load_state(path)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
 
 
 def test_util_mixin_from_toml(tmp_path):
@@ -116,10 +104,8 @@ def test_util_mixin_from_toml(tmp_path):
     assert isinstance(a.vae_enc_opt, Adam)
     assert isinstance(a.vae_dec_opt, Adam)
     assert a.optimizers == ['vae_enc_opt', 'vae_dec_opt']
-
-    path = tmp_path / 'model.pt'
-    a.save_state(path)
-    a.load_state(path)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
 
 
 def test_1d_vq_config(tmp_path):
@@ -154,10 +140,8 @@ def test_1d_vq_config(tmp_path):
     assert isinstance(a.vae_enc_opt, Adam)
     assert isinstance(a.vae_dec_opt, Adam)
     assert a.optimizers == ['vae_enc_opt', 'vae_dec_opt']
-
-    path = tmp_path / 'model.pt'
-    a.save_state(path)
-    a.load_state(path)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
 
 
 def test_util_mixin_transformer(tmp_path):
@@ -169,10 +153,8 @@ def test_util_mixin_transformer(tmp_path):
     assert exp.transformer.emb_dim == 256
     assert exp.transformer.emb_num == 10
     assert exp.transformer.depth == 5
-
-    path = tmp_path / 'model.pt'
-    exp.save_state(path)
-    exp.load_state(path)
+    exp.save_state(tmp_path)
+    exp.load_state(tmp_path)
 
 
 def test_util_mixin_transformer(tmp_path):
@@ -185,6 +167,33 @@ def test_util_mixin_transformer(tmp_path):
     assert exp.transformer.emb_num == 10
     assert exp.transformer.depth == 5
 
-    path = tmp_path / 'model.pt'
-    exp.save_state(path)
-    exp.load_state(path)
+    exp.save_state(tmp_path)
+    exp.load_state(tmp_path)
+
+
+@freeze_time("Jan 14th, 2020", auto_tick_seconds=15)
+def test_util_mixin_num_replicas(tmp_path):
+    toml_str = """
+    num_saved_replicas = 3
+
+    [transformer]
+    class = 'Transformer'
+    n_heads = 8
+    emb_dim = 256
+    emb_num = 10
+    depth = 5
+    block_size = 128
+
+    [[transformer.opt_cfgs]]
+    class = 'AdamW'
+    name = 'transformer_opt'
+    parameter_set = 'get_parameter_groups'
+    lr = 0.0005
+    """
+    exp = Experiment.from_toml(toml_str)
+    for _ in range(5):
+        exp.save_state(tmp_path)
+    assert '2020-01-14|00:01:00.pt' == \
+        str(exp._get_replica_path(tmp_path, 'latest')).split('/')[-1]
+    assert len(os.listdir(tmp_path)) == 3
+    exp.load_state(tmp_path)
