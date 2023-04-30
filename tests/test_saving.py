@@ -30,7 +30,7 @@ def test_saving(tmp_path):
     assert l1.shape == (64, 1)
     assert pl1.shape == (64, 1, 14, 14)
 
-    test_class.save_state(tmp_path / 'model.pt')
+    test_class.save_state(tmp_path)
     test_class = None
     models = None
 
@@ -38,7 +38,7 @@ def test_saving(tmp_path):
     assert test_class2.models == ['vae', 'critic', 'patch_critic']
     assert test_class2.optimizers == ['vae_enc_opt', 'vae_dec_opt', 'critic_opt', 'patch_critic_opt']
 
-    test_class2.load_state(tmp_path / 'model.pt')
+    test_class2.load_state(tmp_path)
     models = [getattr(test_class2, model) for model in test_class2.models]
     for model in models:
         if isinstance(model, torch.nn.Module):
