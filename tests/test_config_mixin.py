@@ -7,7 +7,6 @@ from duct.model.transformer.model import Transformer, RelEmbTransformer
 from torch.optim import Adam, AdamW
 from freezegun import freeze_time
 import os
-import pytest
 
 
 class Experiment(ConfigMixin):

@@ -2,6 +2,7 @@ from pathlib import Path
 from duct.utils.experiment_base import ExperimentBase
 import csv
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 
 class LoggingMixin(ExperimentBase):
@@ -14,6 +15,7 @@ class LoggingMixin(ExperimentBase):
         self.row_count = 0
 
     def setup_logs(self):
+        self.headers = ['datetime', *self.headers]
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.csv_filepath.touch(exist_ok=True)
         if self.csv_filepath.stat().st_size == 0:
@@ -26,6 +28,7 @@ class LoggingMixin(ExperimentBase):
         self.training_artifcat_path.mkdir(parents=True, exist_ok=True)
 
     def log(self, dict):
+        dict['datetime'] = datetime.now().strftime('%Y-%m-%d|%H:%M:%S')
         with self.csv_filepath.open('a') as f:
             writer = csv.DictWriter(f, fieldnames=self.headers)
             writer.writerow(dict)

@@ -1,9 +1,11 @@
 from duct.utils.logging_mixin import LoggingMixin
 from duct.utils.save_imgs import save_img_pairs
 from duct.utils.audio import save_audio
+from freezegun import freeze_time
 import torch
 
 
+@freeze_time("Jan 14th, 2020", auto_tick_seconds=15)
 def test_logger_csv(tmp_path):
     class Exp(LoggingMixin):
         path=str(tmp_path)
@@ -19,8 +21,8 @@ def test_logger_csv(tmp_path):
     exp.log({'test': 1, 'test2': 2})
 
     with open(exp.csv_filepath, 'r') as f:
-        assert f.readline() == 'test,test2\n'
-        assert f.readline() == '1,2\n'
+        assert f.readline() == 'datetime,test,test2\n'
+        assert f.readline() == '2020-01-14|00:00:00,1,2\n'
 
     assert exp.row_count == 1
 
