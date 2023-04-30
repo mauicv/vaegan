@@ -117,7 +117,7 @@ class ConfigMixin(ExperimentBase):
     def save_state(self, path=None):
         if path is None:
             path = self._model_path
-            path.parent.mkdir(parents=True, exist_ok=True)
+            path.mkdir(parents=True, exist_ok=True)
 
         if getattr(self, 'num_saved_replicas'):
             date = datetime.now().strftime('%Y-%m-%d|%H:%M:%S')
