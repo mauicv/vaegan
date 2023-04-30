@@ -3,6 +3,14 @@ from duct.model.model_registry import ModelRegistry
 import torch
 from duct.utils.experiment_base import ExperimentBase
 from pathlib import Path
+from datetime import datetime
+
+
+def sort_by_date_strs(date_strs):
+    return sorted(
+        date_strs, 
+        key=lambda x: datetime.strptime(str(x.stem), '%Y-%m-%d|%H:%M:%S')
+    )
 
 
 def load_config(path):
@@ -14,7 +22,7 @@ class ConfigMixin(ExperimentBase):
         super().__init__()
         self.cfg = cfg
         self.model_registry = ModelRegistry()
-        self.sateful_objs = []
+        self.stateful_objs = []
         self.models = []
         self.optimizers = []
         self.make()
@@ -36,13 +44,13 @@ class ConfigMixin(ExperimentBase):
 
     @property
     def _model_path(self):
-        return self._path / 'models' / 'state.pt'
+        return self._path / 'models'
 
     def __getattr__(self, __name: str):
         if __name == 'cfg':
             return None
         elif getattr(self, 'cfg', None) is not None:
-            return self.cfg[__name]
+            return self.cfg.get(__name, None)
         raise AttributeError("can't get attribute")
 
     def check_if_model_cfg(self, cfg):
@@ -62,7 +70,7 @@ class ConfigMixin(ExperimentBase):
                     model = self.model_registry[cls]
                     model = model(**model_cfg)
                     setattr(self, key, model)
-                    self.sateful_objs.append(key)
+                    self.stateful_objs.append(key)
                     self.models.append(key)
                     if self.cfg.get('use_cuda', False):
                         model.cuda()
@@ -86,17 +94,22 @@ class ConfigMixin(ExperimentBase):
             parameters[0]['weight_decay'] = weight_decay
 
         setattr(self, opt_name, opt_cls(parameters, **opt_cfg))
-        self.sateful_objs.append(opt_name)
+        self.stateful_objs.append(opt_name)
         self.optimizers.append(opt_name)
 
-    def load_state(self, path=None):
+    def load_state(self, path=None, replica='latest'):
         if path is None:
             path = self._model_path
+
+        if getattr(self, 'num_saved_replicas'):
+            path = path / f'{self._get_replica_path(path, replica)}'
+        else:
+            path = path / 'state.pt'
+
         data = torch.load(path)
-        for key in self.sateful_objs:
+        for key in self.stateful_objs:
             obj = getattr(self, key)
             obj.load_state_dict(data[key])
-
             if key in self.optimizers:
                 for _, val in obj.state.items():
                     val['step'] = val['step'].cpu()
@@ -105,9 +118,31 @@ class ConfigMixin(ExperimentBase):
         if path is None:
             path = self._model_path
             path.parent.mkdir(parents=True, exist_ok=True)
+
+        if getattr(self, 'num_saved_replicas'):
+            date = datetime.now().strftime('%Y-%m-%d|%H:%M:%S')
+            path = path / f'{date}.pt'
+        else:
+            path = path / 'state.pt'
+
         data = {
             key: getattr(self, key).state_dict() \
-                for key in self.sateful_objs   
+                for key in self.stateful_objs   
         }
         torch.save(data, path)
 
+        if getattr(self, 'num_saved_replicas'):
+            self._delete_old_replicas(path)
+
+    def _delete_old_replicas(self, path):
+        replicas = sort_by_date_strs(path.parent.glob('*'))
+        if len(replicas) > self.num_saved_replicas:
+            for replica in replicas[:-self.num_saved_replicas]:
+                replica.unlink()
+
+    def _get_replica_path(self, path, replica):
+        replicas = sort_by_date_strs(path.glob('*'))
+        if replica == 'latest':
+            return replicas[-1]
+        elif isinstance(replica, int):
+            return replicas[-replica]

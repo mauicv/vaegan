@@ -54,12 +54,12 @@ def test_rel_emb_transformer(tmp_path):
         mask
     )
 
-    test_class.save_state(tmp_path / 'model.pt')
+    test_class.save_state(tmp_path)
     group1 = test_class.transformer.get_parameter_groups()
     test_class = Experiment.init()
     group2 = test_class.transformer.get_parameter_groups()
     assert_groups_vals(group1, group2)
-    test_class.load_state(tmp_path / 'model.pt')
+    test_class.load_state(tmp_path)
 
     train_step(
         test_class.transformer, 
