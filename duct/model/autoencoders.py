@@ -140,9 +140,9 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             commitment_cost=commitment_cost
         )
 
-    def call(self, x):
+    def call(self, x, training=True):
         x = self.encoder(x)
-        out_z = self.latent_space(x)
+        out_z = self.latent_space(x, training=training)
         y = self.decoder(out_z[0])
         if self.output_activation is not None:
             y = self.output_activation(y)
@@ -150,5 +150,5 @@ class VQVarAutoEncoder(BaseAutoEncoder):
 
     def encode(self, x):
         x = self.encoder(x)
-        out_z = self.latent_space(x)
+        out_z = self.latent_space(x, training=False)
         return out_z[-1]
