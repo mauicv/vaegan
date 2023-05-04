@@ -53,29 +53,34 @@ class Transformer(nn.Module, BaseTransformer):
         self.drop = nn.Dropout(0.1)
         self.apply(self._init_weights)
 
-    def forward(self, x, mask=None):
-        x = self.tok_emb(x)
-        _, l, emb_dim = x.shape
-        pos = torch.arange(0, l, dtype=torch.long, device=x.device)
+    def compute_positional_embeddings(self, pos, emb_dim):
         if hasattr(self, 'pos_emb'):
             pos_emb = self.pos_emb(pos.unsqueeze(0))
         else:
             pos_emb = get_timestep_embedding(pos, emb_dim)
         if next(self.parameters()).is_cuda: pos_emb = pos_emb.cuda()
-        x = x + pos_emb
-        x = self.drop(x)
+        return pos_emb
 
+    def forward(self, x, mask=None):
+        x = self.tok_emb(x)
+        _, l, emb_dim = x.shape
+        pos = torch.arange(0, l, dtype=torch.long, device=x.device)
+        x = x + self.compute_positional_embeddings(pos, emb_dim)
+        x = self.drop(x)
         for layer in self.layers:
             x = layer(x, mask=mask)
         logits = self.linear(x)
         return logits
 
     @torch.no_grad()
-    def infer(self, x, prev_ks=None, prev_vs=None):
+    def infer(self, x, index=None, prev_ks=None, prev_vs=None):
+        x = self.tok_emb(x)
+        _, _, emb_dim = x.shape
+        pos = torch.tensor(index, dtype=torch.long, device=x.device)
+        x = x + self.compute_positional_embeddings(pos, emb_dim)
         if not prev_ks and not prev_vs:
             prev_ks = [None] * self.depth
             prev_vs = [None] * self.depth
-        x = self.tok_emb(x)
         present_ks, present_vs = [], []
         for layer, prev_k, prev_v in zip(self.layers, prev_ks, prev_vs):
             x, present_k, present_v = layer.infer(x, prev_k=prev_k, prev_v=prev_v)
