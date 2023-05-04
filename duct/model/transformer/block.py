@@ -1,5 +1,6 @@
 import torch.nn as nn
 from duct.model.transformer.attention import AttnBlock
+import torch
 
 
 class TransformerBlock(nn.Module):
@@ -24,3 +25,14 @@ class TransformerBlock(nn.Module):
         x = x + self.attn(self.ln1(x), mask=mask)
         x = x + self.mlp(self.ln2(x))
         return x
+
+    @torch.no_grad()
+    def infer(self, x, prev_k=None, prev_v=None):
+        x_, pk, pv = self.attn.infer(
+            self.ln1(x),
+            prev_k=prev_k,
+            prev_v=prev_v
+        )
+        x = x + x_
+        x = x + self.mlp(self.ln2(x))
+        return x, pk, pv

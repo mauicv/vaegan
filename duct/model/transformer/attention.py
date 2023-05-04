@@ -18,7 +18,7 @@ class AttnBlock(nn.Module):
         self.attn_drop = nn.Dropout(0.1)
         self.resid_drop = nn.Dropout(0.1)
 
-    def forward(self, x, mask=None):
+    def qkv(self, x):
         _, l, _ = x.shape
         h_ = x
         h_ = self.norm(h_)
@@ -32,24 +32,48 @@ class AttnBlock(nn.Module):
         v = self.v(h_) \
             .reshape(*tensor_shape)\
             .transpose(1,2) # b, nh, l, hs
+        return q, k, v
 
+    def compute_attention(self, q, k):
         # compute attention
         w_ = q @ k.transpose(2,3) # b, nh, l, l
         w_ = w_ * (int(self.head_size)**(-0.5))
+        return w_
 
+    def attend_to_v(self, w, v):
+        # attend to values
+        h_ = w @ v  # b, nh, l, hs
+        _, _, l, _ = h_.shape
+        h_ = h_ \
+            .transpose(1, 2) \
+            .reshape(-1, l, self.emb_dim) \
+            .contiguous() # b, l, nh*hs
+        h_ = self.proj_out(h_)
+        return h_
+
+    def forward(self, x, mask=None):
+        _, l, _ = x.shape
+        q, k, v = self.qkv(x)
+        w_ = self.compute_attention(q, k)
         if mask is not None:
             if next(self.parameters()).is_cuda: mask = mask.cuda()
             w_ = w_.masked_fill(mask, float('-inf'))
 
         w_ = torch.nn.functional.softmax(w_, dim=-1)
         w_ = self.attn_drop(w_)
-
-        # attend to values
-        h_ = w_ @ v  # b, nh, l, hs
-        h_ = h_ \
-            .transpose(1, 2) \
-            .reshape(-1, l, self.emb_dim) \
-            .contiguous() # b, l, nh*hs
-        h_ = self.resid_drop(self.proj_out(h_))
-
+        h_ = self.attend_to_v(w_, v)
+        h_ = self.resid_drop(h_)
         return h_
+
+    @torch.no_grad()
+    def infer(self, x, prev_k=None, prev_v=None):
+        q, k, v = self.qkv(x)
+
+        if prev_k is not None and prev_v is not None:
+            k = torch.cat((prev_k, k), dim=-2)  # b, nh, l, hs
+            v = torch.cat((prev_v, v), dim=-2)  # b, nh, l, hs
+
+        w_ = self.compute_attention(q, k)
+        w_ = torch.nn.functional.softmax(w_, dim=-1)
+        h_ = self.attend_to_v(w_, v)
+        return h_, k, v

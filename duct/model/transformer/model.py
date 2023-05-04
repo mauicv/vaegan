@@ -70,6 +70,20 @@ class Transformer(nn.Module, BaseTransformer):
         logits = self.linear(x)
         return logits
 
+    @torch.no_grad()
+    def infer(self, x, prev_ks=None, prev_vs=None):
+        if not prev_ks and not prev_vs:
+            prev_ks = [None] * self.depth
+            prev_vs = [None] * self.depth
+        x = self.tok_emb(x)
+        present_ks, present_vs = [], []
+        for layer, prev_k, prev_v in zip(self.layers, prev_ks, prev_vs):
+            x, present_k, present_v = layer.infer(x, prev_k=prev_k, prev_v=prev_v)
+            present_ks.append(present_k)
+            present_vs.append(present_v)
+        logits = self.linear(x)
+        return logits, present_ks, present_vs
+
 
 class RelEmbTransformer(nn.Module, BaseTransformer):
     def __init__(
