@@ -1,0 +1,13 @@
+[transformer]
+class = 'RelEmbTransformer'
+n_heads = 12
+emb_dim = 768
+emb_num = 256
+depth = 12
+block_size = 512
+
+[[transformer.opt_cfgs]]
+class = 'AdamW'
+name = 'transformer_opt'
+parameter_set = 'get_parameter_groups'
+lr = 0.0005

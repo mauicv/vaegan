@@ -85,8 +85,6 @@ class SkewedRelAttnBlock(nn.Module):
 
     def _attend_to_v(self, w, v):
         # attend to values
-        print('w.shape', w.shape)
-        print('v.shape', v.shape)
         h_ = w @ v  # b, nh, l, hs
         _, _, l, _ = h_.shape
         h_ = h_ \
@@ -111,9 +109,15 @@ class SkewedRelAttnBlock(nn.Module):
             .unsqueeze(-2)
         w_ = self._compute_attention(q[:, :, -1:, :], k)
         w_ = w_ + QEr
+        # Need to account for if the user wants to start with n tokens instead of just 1!
+        # print('v', v.shape, 'w_', w_.shape, 'q', q.shape, 'Er', Er.shape, 'QEr', QEr.shape)
         w_ = torch.nn.functional.softmax(w_, dim=-1)
         h_ = self._attend_to_v(w_, v)
-        return h_, {'prev_k': k, 'prev_v': v, 'prev_q': q}
+        return h_, {
+            'prev_k': k[:, :, -self.block_size:, :], 
+            'prev_v': v[:, :, -self.block_size:, :], 
+            'prev_q': q[:, :, -self.block_size:, :]
+        }
 
 def generate_relative_positions(L):
     positions = torch.arange(L).unsqueeze(0) - torch.arange(L).unsqueeze(1)
