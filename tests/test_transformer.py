@@ -57,7 +57,7 @@ def test_attn_block_infer(block_type, n_heads):
         x1, x2 = y1, torch.cat([x2, y2], dim=-2)
         assert y1.shape == x1.shape
         for _, val in ps.items():
-            assert val.shape == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
+            assert val.shape == (batch_size, n_heads, min(i+1, block_size-1), int(emb_dim/n_heads))
 
 
 @pytest.mark.parametrize("n_heads", [4])
@@ -109,7 +109,7 @@ def test_transformer_block_infer(n_heads, block_type):
         assert y1.shape == x.shape
         assert y2.shape == x.shape
         for _, val in ps.items():
-            assert val.shape == (64, n_heads, i + 1, int(64/n_heads))
+            assert val.shape == (64, n_heads, min(i+1, 127), int(64/n_heads))
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
@@ -160,7 +160,7 @@ def test_transformer_infer(n_heads):
         for j in range(depth):
             for _, val in prevs[j].items():
                     assert val.shape \
-                        == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
+                        == (batch_size, n_heads, min(i+1, block_size-1), int(emb_dim/n_heads))
 
 
 @pytest.mark.parametrize("n_heads", [1, 8])
@@ -196,7 +196,7 @@ def test_rel_emb_transformer_infer(n_heads):
         for j in range(depth):
             for _, val in prevs[j].items():
                     assert val.shape \
-                        == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
+                        == (batch_size, n_heads, min(i+1, block_size-1), int(emb_dim/n_heads))
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])

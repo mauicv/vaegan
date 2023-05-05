@@ -14,11 +14,11 @@ def test_rel_emb_transformer(tmp_path):
         path = str(tmp_path)
 
     test_class = Experiment.init()
-    seq = torch.randint(0, 256, (1, 510))
+    seq = torch.randint(0, 256, (1, 509))
     ps = None
     for i in range(5):
         seq, ps = test_class.transformer.infer(seq, ps)
         seq = seq.argmax(-1)[:, -1:]
         assert seq.shape == (1, 1)
         assert ps[0]['prev_k'].shape == \
-            (1, 12, min(510 + i, 512), 64)
+            (1, 12, min(509 + i, 511), 64)
