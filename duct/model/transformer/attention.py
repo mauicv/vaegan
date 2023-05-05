@@ -76,4 +76,4 @@ class AttnBlock(nn.Module):
         w_ = self.compute_attention(q, k)
         w_ = torch.nn.functional.softmax(w_, dim=-1)
         h_ = self.attend_to_v(w_, v)
-        return h_, k, v
+        return h_, {'prev_k': k, 'prev_v': v}

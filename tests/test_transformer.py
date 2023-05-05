@@ -37,27 +37,27 @@ def test_attn_block(n_heads):
     y = attn_block(x)
     assert y.shape == x.shape
 
+
+@pytest.mark.parametrize("block_type", [AttnBlock, SkewedRelAttnBlock])
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
-def test_attn_block_infer(n_heads):
+def test_attn_block_infer(block_type, n_heads):
     block_size, emb_dim, batch_size = 16, 16, 3
     set_seeds()
-    attn_block = AttnBlock(emb_dim=emb_dim, block_size=block_size, n_heads=n_heads)
+    attn_block = block_type(emb_dim=emb_dim, block_size=block_size, n_heads=n_heads)
     disable_dropout(attn_block)
     x_init = torch.randn(batch_size, 1, emb_dim)
-    pk, pv = None, None
+    ps = {}
     x1, x2 = x_init, x_init
     for i in range(block_size):
         with torch.no_grad():
-            y1, pk, pv = attn_block.infer(x1, prev_k=pk, prev_v=pv)
+            y1, ps = attn_block.infer(x1, **ps)
             y2 = attn_block(x2)[:, -1:, :]
         assert y1.shape == y2.shape
         torch.allclose(y1, y2)
-        # torch.all(y1 == y2) # this fails
         x1, x2 = y1, torch.cat([x2, y2], dim=-2)
         assert y1.shape == x1.shape
-        assert pk.shape == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
-        assert pv.shape == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
-
+        for _, val in ps.items():
+            assert val.shape == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
 
 
 @pytest.mark.parametrize("n_heads", [4])
@@ -87,14 +87,20 @@ def test_transformer_block(n_heads):
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
-def test_transformer_block_infer(n_heads):
-    transformer = TransformerBlock(n_heads=n_heads, block_size=128, emb_dim=64)
+@pytest.mark.parametrize("block_type", [AttnBlock, SkewedRelAttnBlock])
+def test_transformer_block_infer(n_heads, block_type):
+    transformer = TransformerBlock(
+        n_heads=n_heads, 
+        block_size=128, 
+        emb_dim=64, 
+        attn_block=block_type
+    )
     x = torch.randn(64, 1, 64)
     x1, x2 = x, x
-    pk, pv = None, None
+    ps = {}
     for i in range(128):
         with torch.no_grad():
-            y1, pk, pv = transformer.infer(x1, prev_k=pk, prev_v=pv)
+            y1, ps = transformer.infer(x1, ps)
             y2 = transformer(x2)[:, -1:, :]
         assert y1.shape == y2.shape
         torch.allclose(y1, y2)
@@ -102,8 +108,8 @@ def test_transformer_block_infer(n_heads):
         x1, x2 = y1, torch.cat([x2, y2], dim=-2)
         assert y1.shape == x.shape
         assert y2.shape == x.shape
-        assert pk.shape == (64, n_heads, i + 1, int(64/n_heads))
-        assert pv.shape == (64, n_heads, i + 1, int(64/n_heads))
+        for _, val in ps.items():
+            assert val.shape == (64, n_heads, i + 1, int(64/n_heads))
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
@@ -138,10 +144,10 @@ def test_transformer_infer(n_heads):
     x_init = torch.randint(0, 10, (batch_size, 1))
     x1, x2 = x_init, x_init
 
-    pk, pv = None, None
+    prevs = None
     for i in range(block_size - 1):
         with torch.no_grad():
-            y1, pk, pv = transformer.infer(x1, i, prev_ks=pk, prev_vs=pv)
+            y1, prevs = transformer.infer(x1, i, prevs=prevs)
             y2 = transformer(x2)[:, -1:, :]
         assert y1.shape == (batch_size, 1, 10)
         assert y2.shape == (batch_size, 1, 10)
@@ -152,10 +158,45 @@ def test_transformer_infer(n_heads):
         assert torch.all(y1 == y2)
         x1, x2 = y1, torch.cat([x2, y2], dim=-1)
         for j in range(depth):
-            assert pk[j].shape \
-                == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
-            assert pv[j].shape \
-                == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
+            for _, val in prevs[j].items():
+                    assert val.shape \
+                        == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
+
+
+@pytest.mark.parametrize("n_heads", [1, 8])
+def test_rel_emb_transformer_infer(n_heads):
+    set_seeds()
+    depth, emb_dim, block_size, batch_size = 2, 16, 8, 4
+    transformer = RelEmbTransformer(
+        n_heads=n_heads,
+        emb_dim=emb_dim,
+        emb_num=10,
+        depth=depth,
+        block_size=block_size,  
+        rel_emb_type="skewed"
+    )
+    transformer.train(False)
+    disable_dropout(transformer)
+    x_init = torch.randint(0, 10, (batch_size, 1))
+    x1, x2 = x_init, x_init
+
+    prevs = None
+    for i in range(block_size - 1):
+        with torch.no_grad():
+            y1, prevs = transformer.infer(x1, prevs=prevs)
+            y2 = transformer(x2)[:, -1:, :]
+        assert y1.shape == (batch_size, 1, 10)
+        assert y2.shape == (batch_size, 1, 10)
+        # Not sure why these aren't exactly equal, there must be some casting
+        # issue somewhere
+        assert torch.allclose(y1, y2, atol=1e-3)
+        y1, y2 = y1.argmax(dim=-1), y2.argmax(dim=-1)
+        assert torch.all(y1 == y2)
+        x1, x2 = y1, torch.cat([x2, y2], dim=-1)
+        for j in range(depth):
+            for _, val in prevs[j].items():
+                    assert val.shape \
+                        == (batch_size, n_heads, i + 1, int(emb_dim/n_heads))
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])

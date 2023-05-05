@@ -73,21 +73,20 @@ class Transformer(nn.Module, BaseTransformer):
         return logits
 
     @torch.no_grad()
-    def infer(self, x, index=None, prev_ks=None, prev_vs=None):
+    def infer(self, x, index=None, prevs=None):
+        if prevs is None: prevs = []
         x = self.tok_emb(x)
         _, _, emb_dim = x.shape
         pos = torch.tensor(index, dtype=torch.long, device=x.device)
         x = x + self.compute_positional_embeddings(pos, emb_dim)
-        if not prev_ks and not prev_vs:
-            prev_ks = [None] * self.depth
-            prev_vs = [None] * self.depth
-        present_ks, present_vs = [], []
-        for layer, prev_k, prev_v in zip(self.layers, prev_ks, prev_vs):
-            x, present_k, present_v = layer.infer(x, prev_k=prev_k, prev_v=prev_v)
-            present_ks.append(present_k)
-            present_vs.append(present_v)
+        if not prevs:
+            prevs = [{}] * self.depth
+        presents = []
+        for layer, ps in zip(self.layers, prevs):
+            x, ps = layer.infer(x, ps)
+            presents.append(ps)
         logits = self.linear(x)
-        return logits, present_ks, present_vs
+        return logits, presents
 
 
 class RelEmbTransformer(nn.Module, BaseTransformer):
@@ -130,3 +129,16 @@ class RelEmbTransformer(nn.Module, BaseTransformer):
             x = layer(x, mask=mask)
         logits = self.linear(x)
         return logits
+
+    @torch.no_grad()
+    def infer(self, x, prevs=None):
+        if prevs is None: prevs = []
+        x = self.tok_emb(x)
+        if not prevs:
+            prevs = [{}] * self.depth
+        presents = []
+        for layer, ps in zip(self.layers, prevs):
+            x, ps = layer.infer(x, ps)
+            presents.append(ps)
+        logits = self.linear(x)
+        return logits, presents

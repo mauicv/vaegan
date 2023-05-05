@@ -27,12 +27,12 @@ class TransformerBlock(nn.Module):
         return x
 
     @torch.no_grad()
-    def infer(self, x, prev_k=None, prev_v=None):
-        x_, pk, pv = self.attn.infer(
+    def infer(self, x, pre_acts=None):
+        if pre_acts is None: pre_acts = {}
+        x_, pre_acts = self.attn.infer(
             self.ln1(x),
-            prev_k=prev_k,
-            prev_v=prev_v
+            **pre_acts
         )
         x = x + x_
         x = x + self.mlp(self.ln2(x))
-        return x, pk, pv
+        return x, pre_acts
