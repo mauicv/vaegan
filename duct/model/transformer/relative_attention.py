@@ -101,13 +101,13 @@ class SkewedRelAttnBlock(nn.Module):
             k = torch.cat((prev_k, k), dim=-2)  # b, nh, l, hs
             v = torch.cat((prev_v, v), dim=-2)  # b, nh, l, hs
             q = torch.cat((prev_q, q), dim=-2)  # b, nh, l, hs
-        l = prev_q.shape[2] + 1 if prev_q is not None else 1
-        embedding_start = self.block_size - l
+        w_ = self._compute_attention(q[:, :, -1:, :], k)
+        l = min(self.block_size, q.shape[2])
+        embedding_start = self.block_size - l # TODO: <- does this make sense?
         Er = self.Er[:, embedding_start:, :].unsqueeze(0)
         QEr = torch \
             .einsum('bnlh,rnlh->bnl', q, Er) \
             .unsqueeze(-2)
-        w_ = self._compute_attention(q[:, :, -1:, :], k)
         w_ = w_ + QEr
         w_ = torch.nn.functional.softmax(w_, dim=-1)
         h_ = self._attend_to_v(w_, v)

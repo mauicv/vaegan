@@ -8,26 +8,7 @@ from duct.model.transformer.mask import get_local_image_mask, get_causal_mask
 import numpy as np
 from random import seed
 import torch
-
-
-def set_seeds():
-    np.random.seed(8)
-    torch.manual_seed(8)
-    torch.cuda.manual_seed(8)
-    # Python std lib random seed
-    seed(0)
-    # Numpy, tensorflow
-    np.random.seed(0)
-    # Pytorch
-    torch.manual_seed(0)
-    torch.cuda.manual_seed_all(0)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
-def disable_dropout(model):
-    for module in model.modules():
-        if isinstance(module, torch.nn.Dropout):
-            module.p = 0.0
+from tests.util import set_seeds, disable_dropout
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
@@ -164,6 +145,26 @@ def test_transformer_infer(n_heads):
 
 
 @pytest.mark.parametrize("n_heads", [1, 8])
+def test_transformer_infer_x(n_heads):
+    set_seeds()
+    depth, emb_dim, block_size, batch_size = 2, 16, 8, 4
+    transformer = Transformer(
+        n_heads=n_heads, 
+        emb_dim=emb_dim,
+        emb_num=10, 
+        depth=depth, 
+        block_size=block_size, 
+        trainable_pos_embeddings=True
+    )
+    transformer.train(False)
+    disable_dropout(transformer)
+    x = torch.randint(0, 10, (batch_size, block_size))
+    a, _ = transformer.infer(x, block_size-1)
+    b = transformer(x)
+    torch.allclose(a, b)
+
+
+@pytest.mark.parametrize("n_heads", [1, 8])
 def test_rel_emb_transformer_infer(n_heads):
     set_seeds()
     depth, emb_dim, block_size, batch_size = 2, 16, 8, 4
@@ -197,6 +198,39 @@ def test_rel_emb_transformer_infer(n_heads):
             for _, val in prevs[j].items():
                     assert val.shape \
                         == (batch_size, n_heads, min(i+1, block_size-1), int(emb_dim/n_heads))
+
+
+@pytest.mark.skip()
+@pytest.mark.parametrize("n_heads", [1, 8])
+def test_rel_emb_transformer_infer_x(n_heads):
+    set_seeds()
+    depth, emb_dim, block_size, batch_size = 2, 16, 8, 4
+    transformer = RelEmbTransformer(
+        n_heads=n_heads,
+        emb_dim=emb_dim,
+        emb_num=10,
+        depth=depth,
+        block_size=block_size,  
+        rel_emb_type="skewed"
+    )
+    transformer.train(False)
+    disable_dropout(transformer)
+    x = torch.randint(0, 10, (batch_size, block_size))
+    a, ps = transformer.infer(x)
+    b = transformer(x)
+    torch.allclose(a, b)
+
+    a, b, = a.argmax(dim=-1), b.argmax(dim=-1)
+    # Seems like small errors accumulate and become significant when sampling from larger networks
+    # [-0.0001, -0.0015, -0.0001, -0.0005,  0.0003,  0.0004,  0.0019,  0.0019, -0.0007,  0.0019]
+    # [6, 6, 8, 0, 9, 0, 9, 9]
+    # [-3.2e-5, -1.5e-3, -2.1e-4, -5.3e-4,  2.8e-4, 3.4e-4,  1.8e-3,  1.9e-3, -7.5e-4,  1.8e-3]
+    # [6, 6, 8, 0, 9, 0, 9, 7]
+    assert torch.all(a == b)
+
+    a2, ps = transformer.infer(a[:, -1:], prevs=ps)
+    b2 = transformer(b)
+    torch.allclose(a2, b2)
 
 
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
