@@ -111,7 +111,7 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             attn_blocks=tuple(0 for _ in range(5)),
             num_embeddings=25,
             commitment_cost=1,
-            output_activation='Sigmoid',
+            output_activation='sigmoid',
             latent_dim=None,
             downsample_block_type='image_block',
             upsample_block_type='image_block'

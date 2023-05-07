@@ -3,6 +3,7 @@ import torch
 from duct.model.decoder import Decoder
 from duct.model.encoder import Encoder
 from itertools import chain
+from duct.model.activations import get_nonlinearity
 
 
 class BaseAutoEncoder(nn.Module):
@@ -14,7 +15,7 @@ class BaseAutoEncoder(nn.Module):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             attn_blocks=tuple(0 for _ in range(5)),
-            output_activation='Sigmoid',
+            output_activation='sigmoid',
             downsample_block_type='image_block',
             upsample_block_type='image_block'
         ):
@@ -34,7 +35,7 @@ class BaseAutoEncoder(nn.Module):
             upsample_block_type=upsample_block_type,
             attn_blocks=attn_blocks
         )
-        self.output_activation = getattr(torch.nn, output_activation)() \
+        self.output_activation = get_nonlinearity(output_activation) \
             if output_activation else None
 
     def forward(self, x):

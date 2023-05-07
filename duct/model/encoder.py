@@ -2,6 +2,8 @@ import torch.nn as nn
 from duct.model.resnet import ResnetBlock
 from duct.model.torch_modules import get_conv, get_norm
 from duct.model.attention import get_attn
+from duct.model.activations import get_nonlinearity
+
 
 class DownSampleBlock(nn.Module):
     def __init__(
@@ -12,16 +14,20 @@ class DownSampleBlock(nn.Module):
             data_dim=2, 
             kernel=24, 
             stride=4, 
-            padding=12):
+            padding=12,
+            dropout=0.1,
+            activation='leakyrelu'):
         super().__init__()
         self.conv = get_conv(data_dim)(in_filters, out_filters, kernel, stride, padding)
         self.norm = get_norm(type=norm_type, data_dim=data_dim)(out_filters)
-        self.leakyrelu = nn.LeakyReLU(0.2)
+        self.nonlinearity = get_nonlinearity(activation)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         x = self.conv(x)
         x = self.norm(x)
-        x = self.leakyrelu(x)
+        x = self.nonlinearity(x)
+        x = self.dropout(x)
         return x
 
     @classmethod
@@ -57,6 +63,9 @@ class Encoder(nn.Module):
         self.ndf = ndf
         self.depth = depth
         self.input_conv = get_conv(self.data_dim)(nc, ndf, 1, 1, 0)
+        self.input_norm = get_norm(type='batch', data_dim=self.data_dim)(ndf)
+        self.input_activation = get_nonlinearity('leakyrelu')
+        self.input_dropout = nn.Dropout(0.1)
 
         layers = nn.ModuleList()
 
@@ -86,6 +95,9 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         x = self.input_conv(x)
+        x = self.input_norm(x)
+        x = self.input_activation(x)
+        x = self.input_dropout(x)
         for layer in self.layers:
             x = layer(x)
         return x

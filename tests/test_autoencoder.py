@@ -16,7 +16,7 @@ def test_auto_encoder(res_blocks):
     )
 
     t_shape = (64, 3, 32, 32)
-    t = torch.zeros(t_shape)
+    t = torch.randn(t_shape)
     y, *_ = autoencoder(t)
     y.shape == t_shape
 
@@ -33,7 +33,7 @@ def test_var_auto_encoder(res_blocks):
     )
 
     t_shape = (64, 3, 32, 32)
-    t = torch.zeros(t_shape)
+    t = torch.randn(t_shape)
     y, mu, logvar = autoencoder(t)
     assert y.shape == t_shape
     assert mu.shape == (64, 516)
@@ -53,7 +53,7 @@ def test_nll_var_auto_encoder(res_blocks):
     )
 
     t_shape = (64, 3, 32, 32)
-    t = torch.zeros(t_shape)
+    t = torch.randn(t_shape)
     y, mu, logvar = autoencoder(t)
     assert y.shape == t_shape
     assert mu.shape == (64, 128, 4, 4)
@@ -71,11 +71,11 @@ def test_vq_var_auto_encoder_2d(res_blocks):
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
         commitment_cost=1,
-        num_embeddings=100
+        num_embeddings=100,
     )
 
     t_shape = (64, 3, 32, 32)
-    t = torch.zeros(t_shape)
+    t = torch.randn(t_shape)
     y, _, _, encoded = autoencoder(t)
     assert y.shape == t_shape
     assert encoded.shape == (64, 4, 4, 100)
@@ -93,13 +93,13 @@ def test_vq_var_auto_encoder_1d(res_blocks):
         attn_blocks=(0, 0, 0, 1),
         commitment_cost=1,
         num_embeddings=100,
-        output_activation='Sigmoid',
+        output_activation='sigmoid',
         upsample_block_type='audio_block',
         downsample_block_type='audio_block'
     )
 
     t_shape = (64, 2, 8192)
-    t = torch.zeros(t_shape)
+    t = torch.randn(t_shape)
     y, _, _, encoded = autoencoder(t)
     assert y.shape == t_shape
     assert encoded.shape == (64, 32, 100)
@@ -114,13 +114,13 @@ def test_vq_var_auto_encoder_1d_aud():
         attn_blocks=(0, 0, 0, 0, 0),
         commitment_cost=1,
         num_embeddings=100,
-        output_activation='Tanh',
+        output_activation='tanh',
         upsample_block_type='audio_block',
         downsample_block_type='audio_block'
     )
 
     t_shape = (64, 2, 8192)
-    t = torch.zeros(t_shape)
+    t = torch.randn(t_shape)
     y, _, _, encoded = autoencoder(t)
     assert -1 <= y.min() < y.max() <= 1
     assert y.shape == t_shape
@@ -136,13 +136,13 @@ def test_vq_var_auto_encoder_1d_v2_aud():
         attn_blocks=(0, 0, 0),
         commitment_cost=1,
         num_embeddings=100,
-        output_activation='Tanh',
+        output_activation='tanh',
         upsample_block_type='audio_block_v2',
         downsample_block_type='audio_block_v2'
     )
 
     t_shape = (64, 2, 8192)
-    t = torch.zeros(t_shape)
+    t = torch.randn(t_shape)
     y, _, _, encoded = autoencoder(t)
     assert -1 <= y.min() < y.max() <= 1
     assert encoded.shape == (64, 1024, 100)

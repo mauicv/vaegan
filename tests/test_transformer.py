@@ -18,7 +18,6 @@ def test_attn_block(n_heads):
     y = attn_block(x)
     assert y.shape == x.shape
 
-
 @pytest.mark.parametrize("block_type", [AttnBlock, SkewedRelAttnBlock])
 @pytest.mark.parametrize("n_heads", [1, 2, 4, 8])
 def test_attn_block_infer(block_type, n_heads):

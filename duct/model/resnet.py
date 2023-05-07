@@ -5,7 +5,7 @@ See https://github.com/CompVis/taming-transformers
 
 import torch
 from torch.nn import Module
-from duct.model.activations import nonlinearity
+from duct.model.activations import get_nonlinearity
 from duct.model.torch_modules import get_conv, get_norm
 
 
@@ -15,9 +15,10 @@ class ResnetBlock(Module):
             in_channels, 
             out_channels=None, 
             conv_shortcut=False, 
-            dropout=0,
+            dropout=0.1,
             data_dim=2,
-            norm_type='batch'
+            norm_type='batch',
+            activation='leakyrelu'
         ):
         super().__init__()
         self.in_channels = in_channels
@@ -25,15 +26,16 @@ class ResnetBlock(Module):
         self.out_channels = out_channels
         self.use_conv_shortcut = conv_shortcut
 
-        self.norm1 = get_norm(data_dim=data_dim, type=norm_type)(in_channels)
+        self.norm1 = get_norm(data_dim=data_dim, type=norm_type)(out_channels)
         self.conv1 = get_conv(data_dim)(
             in_channels, out_channels, kernel_size=3,
             stride=1, padding=1)
+        self.dropout1 = torch.nn.Dropout(dropout)
         self.norm2 = get_norm(data_dim=data_dim, type=norm_type)(out_channels)
-        self.dropout = torch.nn.Dropout(dropout)
         self.conv2 = get_conv(data_dim)(
             out_channels, out_channels, kernel_size=3,
             stride=1, padding=1)
+        self.dropout2 = torch.nn.Dropout(dropout)
         if self.in_channels != self.out_channels:
             if self.use_conv_shortcut:
                 self.conv_shortcut = get_conv(data_dim)(
@@ -43,16 +45,17 @@ class ResnetBlock(Module):
                 self.nin_shortcut = get_conv(data_dim)(
                     in_channels, out_channels, kernel_size=1,
                     stride=1, padding=0)
+        self.norm3 = get_norm(data_dim=data_dim, type=norm_type)(out_channels)
+        self.nonlinearity = get_nonlinearity(activation)
 
     def forward(self, x):
         h = x
-        h = self.norm1(h)
-        h = nonlinearity(h)
         h = self.conv1(h)
-        h = self.norm2(h)
-        h = nonlinearity(h)
-        h = self.dropout(h)
+        h = self.norm1(h)
+        h = self.nonlinearity(h)
+        h = self.dropout1(h)
         h = self.conv2(h)
+        h = self.norm2(h)
 
         if self.in_channels != self.out_channels:
             if self.use_conv_shortcut:
@@ -60,5 +63,7 @@ class ResnetBlock(Module):
             else:
                 x = self.nin_shortcut(x)
 
-        # Should we normalize before adding?
-        return x+h
+        x = self.norm3(x)+h
+        x = self.nonlinearity(x)
+        x = self.dropout2(x)
+        return x

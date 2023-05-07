@@ -9,7 +9,7 @@ data_shape = [ 8192, ]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
 attn_blocks = [0, 0, 0, 0, 0, 0]
-output_activation = 'Tanh'
+output_activation = 'tanh'
 upsample_block_type = 'audio_block'
 downsample_block_type = 'audio_block'
 
