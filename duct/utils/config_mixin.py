@@ -97,12 +97,14 @@ class ConfigMixin(ExperimentBase):
         self.stateful_objs.append(opt_name)
         self.optimizers.append(opt_name)
 
-    def load_state(self, path=None, replica='latest'):
+    def load_state(self, path=None, replica='latest', name=None):
         if path is None:
             path = self._model_path
 
         if getattr(self, 'num_saved_replicas'):
             path = path / f'{self._get_replica_path(path, replica)}'
+        elif name is not None:
+            path = path / f'{name}.pt'
         else:
             path = path / 'state.pt'
 
@@ -114,7 +116,7 @@ class ConfigMixin(ExperimentBase):
                 for _, val in obj.state.items():
                     val['step'] = val['step'].cpu()
 
-    def save_state(self, path=None):
+    def save_state(self, path=None, name=None):
         if path is None:
             path = self._model_path
             path.mkdir(parents=True, exist_ok=True)
@@ -122,6 +124,8 @@ class ConfigMixin(ExperimentBase):
         if getattr(self, 'num_saved_replicas'):
             date = datetime.now().strftime('%Y-%m-%d|%H:%M:%S')
             path = path / f'{date}.pt'
+        elif name is not None:
+            path = path / f'{name}.pt'
         else:
             path = path / 'state.pt'
 
