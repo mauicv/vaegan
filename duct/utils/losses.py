@@ -20,8 +20,8 @@ def g_loss(fake_logits):
 
 
 def adaptive_loss(r_loss, g_loss, autoencoder):
-    last_layer = autoencoder.decoder.out_conv.weight
+    last_layer = autoencoder.decoder.output_conv.weight
     r_grads = grad(r_loss, last_layer, retain_graph=True)[0]
     g_grads = grad(g_loss, last_layer, retain_graph=True)[0]
     d_weight = torch.norm(r_grads) / (torch.norm(g_grads) + 1e-4)
-    return 0.8 * torch.clamp(d_weight, 0.0, 1e4).detach()
+    return torch.clamp(d_weight, 0.0, 1e4).detach()

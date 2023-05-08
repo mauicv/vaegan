@@ -72,7 +72,6 @@ class Decoder(nn.Module):
         self.ndf = ndf
         self.depth = depth
         self.output_conv = get_conv(self.data_dim)(ndf, nc, 1, 1)
-        self.output_norm = get_norm(type='batch', data_dim=self.data_dim)(nc, 1.e-3)
 
         layers = nn.ModuleList()
 
@@ -96,5 +95,4 @@ class Decoder(nn.Module):
         for layer in self.layers:
             z = layer(z)
         x = self.output_conv(z)
-        x = self.output_norm(x)
         return x
