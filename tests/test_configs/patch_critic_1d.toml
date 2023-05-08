@@ -1,5 +1,5 @@
 [patch_critic]
-class = 'NLayerDiscriminator'
+class = 'PatchCritic1D'
 nc = 3
 ndf = 64
 n_layers = 3

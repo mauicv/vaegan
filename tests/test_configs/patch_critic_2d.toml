@@ -1,0 +1,10 @@
+[patch_critic]
+class = 'PatchCritic2D'
+nc = 3
+ndf = 64
+n_layers = 3
+
+[[patch_critic.opt_cfgs]]
+class='Adam'
+name='patch_critic_opt'
+lr = 0.0005

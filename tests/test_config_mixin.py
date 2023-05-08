@@ -2,7 +2,7 @@ from duct.utils.config_mixin import ConfigMixin
 from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder, \
     VQVarAutoEncoder
 from duct.model.critic import Critic
-from duct.model.patch_critic import NLayerDiscriminator
+from duct.model.patch_critic import PatchCritic1D, PatchCritic2D
 from duct.model.transformer.model import Transformer, RelEmbTransformer
 from torch.optim import Adam, AdamW
 from freezegun import freeze_time
@@ -66,8 +66,16 @@ def test_util_mixin_critic(tmp_path):
 
 
 def test_util_mixin_patch_critic(tmp_path):
-    a = Experiment.from_file(path='./tests/test_configs/patch_critic.toml')
-    assert isinstance(a.patch_critic, NLayerDiscriminator)
+    a = Experiment.from_file(path='./tests/test_configs/patch_critic_2d.toml')
+    assert isinstance(a.patch_critic, PatchCritic2D)
+    assert isinstance(a.patch_critic_opt, Adam)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path)
+
+
+def test_util_mixin_patch_critic(tmp_path):
+    a = Experiment.from_file(path='./tests/test_configs/patch_critic_1d.toml')
+    assert isinstance(a.patch_critic, PatchCritic1D)
     assert isinstance(a.patch_critic_opt, Adam)
     a.save_state(tmp_path)
     a.load_state(tmp_path)

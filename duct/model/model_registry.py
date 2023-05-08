@@ -1,7 +1,7 @@
 from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder, \
     VQVarAutoEncoder, VQVarAutoEncoder
 from duct.model.critic import Critic
-from duct.model.patch_critic import NLayerDiscriminator
+from duct.model.patch_critic import PatchCritic1D, PatchCritic2D
 from duct.model.transformer.model import Transformer, RelEmbTransformer
 
 
@@ -11,7 +11,8 @@ class ModelRegistry:
         self.models = {
             'NLLVarAutoEncoder': NLLVarAutoEncoder,
             'Critic': Critic,
-            'NLayerDiscriminator': NLayerDiscriminator,
+            'PatchCritic1D': PatchCritic1D,
+            'PatchCritic2D': PatchCritic2D,
             'VarAutoEncoder': VarAutoEncoder,
             'AutoEncoder': AutoEncoder,
             'VQVarAutoEncoder': VQVarAutoEncoder,
