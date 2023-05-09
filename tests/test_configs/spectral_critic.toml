@@ -1,0 +1,16 @@
+[critic]
+class = 'SpectralCritic'
+nc = 4
+ndf = 16
+data_shape = [4, 8192]
+depth = 3
+patch = true
+n_fft = 1024
+hop_length = 256
+window_length = 1024
+
+
+[[critic.opt_cfgs]]
+class = 'Adam'
+name = 'critic_opt'
+lr = 0.0005

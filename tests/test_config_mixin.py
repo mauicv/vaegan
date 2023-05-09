@@ -1,7 +1,7 @@
 from duct.utils.config_mixin import ConfigMixin
 from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder, \
     VQVarAutoEncoder
-from duct.model.critic import Critic
+from duct.model.critic import Critic, MultiResCritic, SpectralCritic
 from duct.model.patch_critic import PatchCritic1D, PatchCritic2D
 from duct.model.transformer.model import Transformer, RelEmbTransformer
 from torch.optim import Adam, AdamW
@@ -204,3 +204,20 @@ def test_util_mixin_num_replicas(tmp_path):
         str(exp._get_replica_path(tmp_path, 'latest')).split('/')[-1]
     assert len(os.listdir(tmp_path)) == 3
     exp.load_state(tmp_path)
+
+
+def test_util_mixin_multi_res_critic(tmp_path):
+    a = Experiment.from_file(path='./tests/test_configs/multi_res_critic.toml')
+    assert len(a.critic.critics) == 3
+    assert isinstance(a.critic, MultiResCritic)
+    assert isinstance(a.critic_opt, Adam)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path) 
+
+
+def test_util_mixin_spectral_critic(tmp_path):
+    a = Experiment.from_file(path='./tests/test_configs/spectral_critic.toml')
+    assert isinstance(a.critic, SpectralCritic)
+    assert isinstance(a.critic_opt, Adam)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path) 

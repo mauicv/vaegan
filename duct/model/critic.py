@@ -66,7 +66,7 @@ class Critic(nn.Module):
         return loss
 
 
-class MutliResCritic(nn.Module):
+class MultiResCritic(nn.Module):
     def __init__(self, 
             nc, 
             ndf,  
@@ -78,7 +78,7 @@ class MutliResCritic(nn.Module):
             patch=True,
             num_resolutions=3
         ):
-        super(MutliResCritic, self).__init__()
+        super(MultiResCritic, self).__init__()
         self.downsampler = nn.AvgPool1d(kernel_size=4, stride=2, padding=1,
                                         count_include_pad=False)
         

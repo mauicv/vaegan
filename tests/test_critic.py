@@ -1,6 +1,6 @@
 import pytest
 import torch
-from duct.model.critic import Critic, MutliResCritic, SpectralCritic
+from duct.model.critic import Critic, MultiResCritic, SpectralCritic
 
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 2, 0)])
@@ -90,7 +90,7 @@ def test_critic_1D_aud_v2():
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 2, 0)])
 def test_multi_res_critic_1D(res_blocks):
-    critic = MutliResCritic(
+    critic = MultiResCritic(
         2, 16, depth=3, 
         data_shape=(8192, ),
         res_blocks=res_blocks,
@@ -107,7 +107,7 @@ def test_multi_res_critic_1D(res_blocks):
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 2, 0)])
 def test_multi_res_loss_1D(res_blocks):
-    critic = MutliResCritic(
+    critic = MultiResCritic(
         2, 16, depth=3, 
         data_shape=(8192, ),
         res_blocks=res_blocks,
@@ -118,7 +118,7 @@ def test_multi_res_loss_1D(res_blocks):
     t1 = torch.randn((1, 2, 8192))
     t2 = torch.randn((1, 2, 8192))
     loss = critic.loss(t1, t2)
-    assert loss.shape == (1, )
+    assert loss > 0
     loss = critic.loss(t1, t1)
     assert loss == 0
 
@@ -154,8 +154,7 @@ def test_spectral_loss(res_blocks):
     )
     t1 = torch.randn((1, 2, 8192))
     t2 = torch.randn((1, 2, 8192))
-    losses = critic.loss(t1, t2)
-    print(losses)
-    # assert loss.shape == (1, )
-    # loss = critic.loss(t1, t1)
-    # assert loss == 0
+    loss = critic.loss(t1, t2)
+    assert loss > 0
+    loss = critic.loss(t1, t1)
+    assert loss == 0
