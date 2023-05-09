@@ -220,4 +220,4 @@ def test_util_mixin_spectral_critic(tmp_path):
     assert isinstance(a.critic, SpectralCritic)
     assert isinstance(a.critic_opt, Adam)
     a.save_state(tmp_path)
-    a.load_state(tmp_path) 
+    a.load_state(tmp_path)

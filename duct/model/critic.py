@@ -138,6 +138,8 @@ class SpectralCritic(nn.Module):
 
         with torch.no_grad():
             test = torch.ones((1, *data_shape))
+            if next(self.parameters()).is_cuda: 
+                test = test.cuda()
             test = self.spectral_transform(test)
             test = self.spectral_encoder(test)
 

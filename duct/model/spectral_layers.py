@@ -13,21 +13,25 @@ class SpectralTransform(nn.Module):
                 hop_length=256, 
                 window_length=1024,
                 window_fn=torch.hann_window,
-                device='cpu'
             ):
         super(SpectralTransform, self).__init__()
         self.n_fft = n_fft
         self.hop_length = hop_length
         self.win_length = window_length
-        self.window = window_fn(window_length, device=device)
+        self.window_fn = window_fn
 
     def forward(self, x):
+        device = 'cuda' if x.is_cuda else 'cpu'
+        window = self.window_fn(
+            self.win_length, 
+            device=device
+        )
         x_s_1 = torch.stft(
             x[:, 0, :],
             n_fft=self.n_fft,
             hop_length=self.hop_length,
             win_length=self.win_length,
-            window=self.window,
+            window=window,
             return_complex=False,
         )
         x_s_2 = torch.stft(
@@ -35,7 +39,7 @@ class SpectralTransform(nn.Module):
             n_fft=self.n_fft,
             hop_length=self.hop_length,
             win_length=self.win_length,
-            window=self.window,
+            window=window,
             return_complex=False,
         )
         s_x = torch.cat((x_s_1, x_s_2), dim=-1)
