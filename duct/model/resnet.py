@@ -5,7 +5,7 @@ See https://github.com/CompVis/taming-transformers
 
 import torch
 from torch.nn import Module
-from duct.model.activations import get_nonlinearity
+from duct.model.torch_modules import get_nonlinearity
 from duct.model.torch_modules import get_conv, get_norm
 
 
@@ -18,7 +18,8 @@ class ResnetBlock(Module):
             dropout=0.1,
             data_dim=2,
             norm_type='batch',
-            activation='ELU'
+            activation='ELU',
+            kernel_size=3
         ):
         super().__init__()
         self.in_channels = in_channels
@@ -31,7 +32,7 @@ class ResnetBlock(Module):
             data_dim,
             in_channels=in_channels, 
             out_channels=out_channels,
-            kernel_size=3,
+            kernel_size=kernel_size,
             stride=1,
             padding=1
         )
@@ -41,7 +42,7 @@ class ResnetBlock(Module):
             data_dim, 
             in_channels=out_channels, 
             out_channels=out_channels, 
-            kernel_size=3,
+            kernel_size=kernel_size,
             stride=1,
             padding=1
         )
@@ -52,7 +53,7 @@ class ResnetBlock(Module):
                     data_dim, 
                     in_channels=in_channels, 
                     out_channels=out_channels,
-                    kernel_size=3,
+                    kernel_size=kernel_size,
                     stride=1,
                     padding=1
                 )

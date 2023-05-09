@@ -1,8 +1,9 @@
 import numpy as np
 import torch.nn as nn
+import torch
 from duct.model.encoder import Encoder
 from duct.model.torch_modules import get_conv
-
+from duct.model.spectral_layers import SpectralTransform, SpectralEncoder
 
 def weights_init(m):
     classname = m.__class__.__name__
@@ -111,3 +112,59 @@ class MutliResCritic(nn.Module):
             y = self.downsampler(y)
         self.train(True) # unfreeze encoder
         return loss
+
+
+class SpectralCritic(nn.Module):
+    def __init__(self,
+            nc, 
+            ndf,  
+            data_shape=(4, 8192),
+            depth=5,
+            patch=True,
+            n_fft=1024,
+            hop_length=256,
+            window_length=1024,
+        ):
+        super(SpectralCritic, self).__init__()
+        self.patch = patch
+        self.spectral_transform = SpectralTransform(
+            n_fft=n_fft,
+            hop_length=hop_length,
+            window_length=window_length
+        )
+        self.spectral_encoder = SpectralEncoder(
+            nc=nc, ndf=ndf, depth=depth,
+        )
+
+        with torch.no_grad():
+            test = torch.ones((1, *data_shape))
+            test = self.spectral_transform(test)
+            test = self.spectral_encoder(test)
+
+        self.out_conv = get_conv(
+            data_dim=2,
+            in_channels=test.shape[1],
+            out_channels=1,
+            kernel_size=(test.shape[2], 1)
+        )
+
+        self.apply(weights_init)
+
+    def forward(self, x):
+        x = self.spectral_transform(x)
+        x = self.spectral_encoder(x)
+        x = self.out_conv(x)
+        return x.squeeze()
+
+    def loss(self, x, y, layers=None):
+        self.train(False)
+        x = self.spectral_transform(x)
+        y = self.spectral_transform(y)
+        losses = self.spectral_encoder.loss(x, y)
+        self.train(True)
+        if layers is not None:
+            losses = [
+                loss for ind, loss in enumerate(losses)
+                if ind in layers
+            ]
+        return sum(losses) / len(losses)

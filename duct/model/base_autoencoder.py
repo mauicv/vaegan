@@ -3,7 +3,7 @@ import torch
 from duct.model.decoder import Decoder
 from duct.model.encoder import Encoder
 from itertools import chain
-from duct.model.activations import get_nonlinearity
+from duct.model.torch_modules import get_nonlinearity
 
 
 class BaseAutoEncoder(nn.Module):

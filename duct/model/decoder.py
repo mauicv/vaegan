@@ -2,7 +2,7 @@ import torch.nn as nn
 from duct.model.resnet import ResnetBlock
 from duct.model.torch_modules import get_conv, get_norm, get_rep_pad, get_upsample
 from duct.model.attention import get_attn
-from duct.model.activations import get_nonlinearity
+from duct.model.torch_modules import get_nonlinearity
 
 
 class UpSampleBlock(nn.Module):
