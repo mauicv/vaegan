@@ -60,6 +60,7 @@ class PatchCritic2D(nn.Module):
                 stride=1, padding=padw
             )]
         self.main = nn.Sequential(*sequence)
+        self.apply(weights_init)
 
     def forward(self, input):
         return self.main(input)
@@ -115,6 +116,7 @@ class PatchCritic1D(nn.Module):
                 padding=padw
             )]
         self.main = nn.Sequential(*sequence)
+        self.apply(weights_init)
 
     def forward(self, input):
         return self.main(input)

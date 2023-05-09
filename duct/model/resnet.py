@@ -18,7 +18,7 @@ class ResnetBlock(Module):
             dropout=0.1,
             data_dim=2,
             norm_type='batch',
-            activation='leakyrelu'
+            activation='ELU'
         ):
         super().__init__()
         self.in_channels = in_channels
@@ -27,24 +27,44 @@ class ResnetBlock(Module):
         self.use_conv_shortcut = conv_shortcut
 
         self.norm1 = get_norm(data_dim=data_dim, type=norm_type)(out_channels)
-        self.conv1 = get_conv(data_dim)(
-            in_channels, out_channels, kernel_size=3,
-            stride=1, padding=1)
+        self.conv1 = get_conv(
+            data_dim,
+            in_channels=in_channels, 
+            out_channels=out_channels,
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
         self.dropout1 = torch.nn.Dropout(dropout)
         self.norm2 = get_norm(data_dim=data_dim, type=norm_type)(out_channels)
-        self.conv2 = get_conv(data_dim)(
-            out_channels, out_channels, kernel_size=3,
-            stride=1, padding=1)
+        self.conv2 = get_conv(
+            data_dim, 
+            in_channels=out_channels, 
+            out_channels=out_channels, 
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
         self.dropout2 = torch.nn.Dropout(dropout)
         if self.in_channels != self.out_channels:
             if self.use_conv_shortcut:
-                self.conv_shortcut = get_conv(data_dim)(
-                    in_channels, out_channels, kernel_size=3,
-                    stride=1, padding=1)
+                self.conv_shortcut = get_conv(
+                    data_dim, 
+                    in_channels=in_channels, 
+                    out_channels=out_channels,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1
+                )
             else:
-                self.nin_shortcut = get_conv(data_dim)(
-                    in_channels, out_channels, kernel_size=1,
-                    stride=1, padding=0)
+                self.nin_shortcut = get_conv(
+                    data_dim,
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                )
         self.norm3 = get_norm(data_dim=data_dim, type=norm_type)(out_channels)
         self.nonlinearity = get_nonlinearity(activation)
 

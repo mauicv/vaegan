@@ -16,9 +16,15 @@ class UpSampleBlock(nn.Module):
             kernel, 
             padding,
             dropout=0.1,
-            activation='leakyrelu'):
+            activation='ELU'):
         super().__init__()
-        self.conv = get_conv(data_dim)(in_filters, out_filters, kernel, padding=0)
+        self.conv = get_conv(
+            data_dim, 
+            in_channels=in_filters, 
+            out_channels=out_filters,
+            kernel_size=kernel,
+            padding=0
+        )
         self.up = get_upsample(data_dim)(scale_factor=scale_factor)
         self.rp2d = get_rep_pad(data_dim)(padding)
         self.norm = get_norm(type=norm_type, data_dim=data_dim)(out_filters, 1.e-3)
@@ -71,7 +77,12 @@ class Decoder(nn.Module):
         self.nc = nc
         self.ndf = ndf
         self.depth = depth
-        self.output_conv = get_conv(self.data_dim)(ndf, nc, 1, 1)
+        self.output_conv = get_conv(
+            self.data_dim, 
+            in_channels=ndf,
+            out_channels=nc,
+            kernel_size=1
+        )
 
         layers = nn.ModuleList()
 

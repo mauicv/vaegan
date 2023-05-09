@@ -16,9 +16,16 @@ class DownSampleBlock(nn.Module):
             stride=4, 
             padding=12,
             dropout=0.1,
-            activation='leakyrelu'):
+            activation='ELU'):
         super().__init__()
-        self.conv = get_conv(data_dim)(in_filters, out_filters, kernel, stride, padding)
+        self.conv = get_conv(
+            data_dim,
+            in_channels=in_filters,
+            out_channels=out_filters,
+            kernel_size=kernel,
+            stride=stride,
+            padding=padding
+        )
         self.norm = get_norm(type=norm_type, data_dim=data_dim)(out_filters)
         self.nonlinearity = get_nonlinearity(activation)
         self.dropout = nn.Dropout(dropout)
@@ -62,9 +69,16 @@ class Encoder(nn.Module):
         self.nc = nc
         self.ndf = ndf
         self.depth = depth
-        self.input_conv = get_conv(self.data_dim)(nc, ndf, 1, 1, 0)
+        self.input_conv = get_conv(
+            self.data_dim,
+            in_channels=nc,
+            out_channels=ndf,
+            kernel_size=1,
+            stride=1,
+            padding=0
+        )
         self.input_norm = get_norm(type='batch', data_dim=self.data_dim)(ndf)
-        self.input_activation = get_nonlinearity('leakyrelu')
+        self.input_activation = get_nonlinearity('ELU')
         self.input_dropout = nn.Dropout(0.1)
 
         layers = nn.ModuleList()

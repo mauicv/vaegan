@@ -1,8 +1,9 @@
 import torch.nn as nn
+from torch.nn.utils import weight_norm
 
 
-def get_conv(data_dim=2):
-    return {
+def get_conv(data_dim=2, *args, with_weight_norm=True, **kwargs):
+    conv_layer_class = {
         1: nn.Conv1d, 
         2: nn.Conv2d, 
         3: nn.Conv3d,
@@ -10,6 +11,11 @@ def get_conv(data_dim=2):
         data_dim, 
         ValueError('data_dim must be 1, 2, or 3')
     )
+    conv_layer = conv_layer_class(*args, **kwargs)
+    if with_weight_norm:
+        conv_layer = weight_norm(conv_layer)
+    return conv_layer
+
 
 def get_norm(type='batch', data_dim=2):
     return {
