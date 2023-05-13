@@ -9,7 +9,6 @@ n_fft = 1024
 hop_length = 256
 window_length = 1024
 
-
 [[critic.opt_cfgs]]
 class = 'Adam'
 name = 'critic_opt'
