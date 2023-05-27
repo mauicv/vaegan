@@ -37,7 +37,7 @@ class AttnBlock(nn.Module):
     def compute_attention(self, q, k):
         # compute attention
         w_ = q @ k.transpose(2,3) # b, nh, l, l
-        w_ = w_ * (int(self.head_size)**(-0.5))
+        w_ = w_ * (int(self.emb_dim)**(-0.5))
         return w_
 
     def attend_to_v(self, w, v):

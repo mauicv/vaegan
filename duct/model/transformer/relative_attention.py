@@ -49,12 +49,11 @@ class SkewedRelAttnBlock(nn.Module):
         SRel = self._skew(QEr)
 
         w_ = self._compute_attention(q, k)
+        w_ = w_ + SRel
 
         if mask is not None:
             w_ = w_.masked_fill(mask, float('-inf'))
-            SRel = SRel.masked_fill(mask, float('-inf'))
 
-        w_ = w_ + SRel
         w_ = torch.nn.functional.softmax(w_, dim=-1)
         w_ = self.attn_drop(w_)
         h_ = self._attend_to_v(w_, v)
@@ -80,7 +79,7 @@ class SkewedRelAttnBlock(nn.Module):
     def _compute_attention(self, q, k):
         # compute attention
         w_ = q @ k.transpose(2,3) # b, nh, l, l
-        w_ = w_ * (int(self.head_size)**(-0.5))
+        w_ = w_ * (int(self.emb_dim)**(-0.5))
         return w_
 
     def _attend_to_v(self, w, v):
@@ -166,15 +165,13 @@ class RelAttnBlock(nn.Module):
 
         # compute attention
         w_ = q @ k.transpose(2,3) # b, nh, l, l
-        w_ = w_ * (int(self.head_size)**(-0.5))
+        w_ = w_ * (int(self.emb_dim)**(-0.5))
 
         QEr = torch.einsum('bnlh,rnlkh->bnlk', q, Er)  # b, nh, l, l
+        w_ = w_ + QEr
 
         if mask is not None:
             w_ = w_.masked_fill(mask, float('-inf'))
-            QEr = QEr.masked_fill(mask, float('-inf'))
-
-        w_ = w_ + QEr
 
         w_ = torch.nn.functional.softmax(w_, dim=-1)
         w_ = self.attn_drop(w_)
