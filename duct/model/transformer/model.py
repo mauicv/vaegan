@@ -1,6 +1,7 @@
 import math
 import torch
 import torch.nn as nn
+
 from duct.model.transformer.block import TransformerBlock
 from duct.model.transformer.base_transformer import BaseTransformer
 from duct.model.transformer.attention import AttnBlock
