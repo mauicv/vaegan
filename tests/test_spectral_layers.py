@@ -9,27 +9,27 @@ def test_spectral_transform():
         hop_length=256, 
         window_length=1024
     )
-    t = torch.randn((64, 2, 8192))
-    assert st(t).shape == (64, 4, 513, 33)
+    t = torch.randn((64, 1, 8192))
+    assert st(t).shape == (64, 2, 513, 33)
 
 
 def test_spectral_residual_block():
     srb = SpectralResidualBlock(
-        in_channels=4,
+        in_channels=2,
         mid_channels=16,
         out_channels=32,
         s_t=2, s_f=2
     )
-    t = torch.randn((64, 4, 513, 33))
+    t = torch.randn((64, 2, 513, 33))
     assert srb(t).shape == (64, 32, 257, 17)
 
 def test_spectral_encoder_block():
     seb = SpectralEncoderBlock(
-        in_channels=4,
+        in_channels=2,
         mid_channels=16,
         out_channels=32,
     )
-    t = torch.randn((64, 4, 513, 33))
+    t = torch.randn((64, 2, 513, 33))
     assert seb(t).shape == (64, 32, 129, 17)
 
 
@@ -40,11 +40,11 @@ def test_spectral_encoder():
         window_length=1024
     )
     s_enc = SpectralEncoder(
-        nc=4,
+        nc=2,
         depth=3,
         ndf=8
     )
 
-    t = torch.randn((64, 2, 8192))
+    t = torch.randn((64, 1, 8192))
     x = s_enc(st(t))
     assert x.shape == (64, 512, 8, 4)

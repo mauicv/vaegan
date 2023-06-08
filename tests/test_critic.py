@@ -134,7 +134,7 @@ def test_multi_res_loss_1D(res_blocks):
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 2, 0)])
 def test_spectral_critic(res_blocks):
     critic = SpectralCritic(
-        nc=4, 
+        nc=2, 
         ndf=8,  
         data_shape=(4, 8192),
         depth=3,
@@ -151,7 +151,7 @@ def test_spectral_critic(res_blocks):
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 2, 0)])
 def test_spectral_loss(res_blocks):
     critic = SpectralCritic(
-        nc=4, 
+        nc=2, 
         ndf=8,  
         data_shape=(4, 8192),
         depth=3,

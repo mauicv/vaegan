@@ -26,7 +26,7 @@ class SpectralTransform(nn.Module):
             self.win_length, 
             device=device
         )
-        x_s_1 = torch.stft(
+        x_s = torch.stft(
             x[:, 0, :],
             n_fft=self.n_fft,
             hop_length=self.hop_length,
@@ -34,16 +34,7 @@ class SpectralTransform(nn.Module):
             window=window,
             return_complex=False,
         )
-        x_s_2 = torch.stft(
-            x[:, 1, :],
-            n_fft=self.n_fft,
-            hop_length=self.hop_length,
-            win_length=self.win_length,
-            window=window,
-            return_complex=False,
-        )
-        s_x = torch.cat((x_s_1, x_s_2), dim=-1)
-        return s_x.permute(0, 3, 1, 2)
+        return x_s.permute(0, 3, 1, 2)
 
 
 class SpectralResidualBlock(nn.Module):
@@ -136,7 +127,7 @@ class SpectralEncoderBlock(nn.Module):
 class SpectralEncoder(nn.Module):
     def __init__(
                 self, 
-                nc=4, 
+                nc=2,
                 depth=3, 
                 ndf=32
             ):
