@@ -13,6 +13,7 @@ def test_auto_encoder(res_blocks):
         data_shape=(32, 32),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 0),
+        ch_mult=(1, 1, 2),
     )
 
     t_shape = (64, 3, 32, 32)
@@ -30,6 +31,7 @@ def test_var_auto_encoder(res_blocks):
         data_shape=(32, 32),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 0),
+        ch_mult=(1, 1, 2),
     )
 
     t_shape = (64, 3, 32, 32)
@@ -50,6 +52,7 @@ def test_nll_var_auto_encoder(res_blocks):
         data_shape=(32, 32),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
+        ch_mult=(2, 2, 2),
     )
 
     t_shape = (64, 3, 32, 32)
@@ -70,6 +73,7 @@ def test_vq_var_auto_encoder_2d(res_blocks):
         data_shape=(32, 32),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
+        ch_mult=(1, 1, 2),
         commitment_cost=1,
         num_embeddings=100,
     )
@@ -91,6 +95,7 @@ def test_vq_var_auto_encoder_1d(res_blocks):
         data_shape=(8192, ),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 0, 1),
+        ch_mult=(1, 1, 2, 3),
         commitment_cost=1,
         num_embeddings=100,
         output_activation='sigmoid',
@@ -112,6 +117,7 @@ def test_vq_var_auto_encoder_1d_aud():
         data_shape=(8192, ),
         res_blocks=(0, 0, 0, 0, 0),
         attn_blocks=(0, 0, 0, 0, 0),
+        ch_mult=(1, 1, 1, 1, 2),
         commitment_cost=1,
         num_embeddings=100,
         output_activation='tanh',
@@ -134,6 +140,7 @@ def test_vq_var_auto_encoder_1d_v2_aud():
         data_shape=(8192, ),
         res_blocks=(0, 0, 0),
         attn_blocks=(0, 0, 0),
+        ch_mult=(1, 1, 2),
         commitment_cost=1,
         num_embeddings=100,
         output_activation='tanh',

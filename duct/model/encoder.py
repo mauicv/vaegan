@@ -59,6 +59,7 @@ class Encoder(nn.Module):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             attn_blocks=tuple(0 for _ in range(5)),
+            ch_mult=(1, 1, 2, 2, 4),
             downsample_block_type='image_block',
         ):
         super(Encoder, self).__init__()
@@ -84,9 +85,9 @@ class Encoder(nn.Module):
         layers = nn.ModuleList()
 
         ndf_cur = ndf
-        for ind in range(self.depth):
+        for ind, ch_factor in enumerate(ch_mult):
             in_filters = ndf_cur
-            ndf_cur = ndf_cur * 2
+            ndf_cur = ndf_cur * ch_factor
             for _ in range(res_blocks[ind]):
                 layers.append(ResnetBlock(
                     in_channels=in_filters, 

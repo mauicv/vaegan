@@ -12,3 +12,6 @@ fma_small
 .DS_store
 _tmp_
 .pytest_cache
+data
+sample.py
+train.py

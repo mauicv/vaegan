@@ -13,6 +13,7 @@ class AutoEncoder(BaseAutoEncoder):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             attn_blocks=tuple(0 for _ in range(5)),
+            ch_mult=(1, 1, 2, 2, 4),
             latent_dim=None,
             downsample_block_type='image_block',
             upsample_block_type='image_block',
@@ -21,6 +22,7 @@ class AutoEncoder(BaseAutoEncoder):
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
+            ch_mult=ch_mult,
             downsample_block_type=downsample_block_type,
             upsample_block_type=upsample_block_type,
             attn_blocks=attn_blocks
@@ -41,6 +43,7 @@ class VarAutoEncoder(BaseAutoEncoder):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             attn_blocks=tuple(0 for _ in range(5)),
+            ch_mult=(1, 1, 2, 2, 4),
             latent_dim=None,
             downsample_block_type='image_block',
             upsample_block_type='image_block'
@@ -49,6 +52,7 @@ class VarAutoEncoder(BaseAutoEncoder):
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
+            ch_mult=ch_mult,
             downsample_block_type=downsample_block_type,
             upsample_block_type=upsample_block_type,
             attn_blocks=attn_blocks
@@ -74,6 +78,7 @@ class NLLVarAutoEncoder(BaseAutoEncoder):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             attn_blocks=tuple(0 for _ in range(5)),
+            ch_mult=(1, 1, 2, 2, 4),
             latent_dim=None,
             downsample_block_type='image_block',
             upsample_block_type='image_block'
@@ -84,6 +89,7 @@ class NLLVarAutoEncoder(BaseAutoEncoder):
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
+            ch_mult=ch_mult,
             downsample_block_type=downsample_block_type,
             upsample_block_type=upsample_block_type,
             attn_blocks=attn_blocks
@@ -109,6 +115,7 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             attn_blocks=tuple(0 for _ in range(5)),
+            ch_mult=(1, 1, 2, 2, 4),
             num_embeddings=25,
             commitment_cost=1,
             output_activation='sigmoid',
@@ -123,6 +130,7 @@ class VQVarAutoEncoder(BaseAutoEncoder):
             nc=nc, ndf=ndf, depth=depth, 
             data_shape=data_shape,
             res_blocks=res_blocks,
+            ch_mult=ch_mult,
             output_activation=output_activation,
             downsample_block_type=downsample_block_type,
             upsample_block_type=upsample_block_type,

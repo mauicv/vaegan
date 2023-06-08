@@ -91,6 +91,7 @@ def test_util_mixin_from_toml(tmp_path):
     depth = 6
     res_blocks = [0, 0, 0, 0, 0, 0]
     attn_blocks = [0, 0, 0, 0, 0, 1]
+    ch_mult = [2, 2, 2, 2, 2, 2]
 
     [[vae.opt_cfgs]]
     class='Adam'
@@ -125,6 +126,7 @@ def test_1d_vq_config(tmp_path):
     depth = 6
     res_blocks = [0, 0, 0, 0, 0, 0]
     attn_blocks = [0, 0, 0, 0, 0, 0]
+    ch_mult = [2, 2, 2, 2, 2, 2]
     upsample_block_type = 'audio_block'
     downsample_block_type = 'audio_block'
 

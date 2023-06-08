@@ -6,4 +6,5 @@ data_shape = [ 128, 128,]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
 attn_blocks = [0, 0, 0, 0, 0, 0]
+ch_mult = [2, 2, 2, 2, 2, 2]
 latent_dim = 2024

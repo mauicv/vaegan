@@ -65,6 +65,7 @@ class Decoder(nn.Module):
             depth=5,
             res_blocks=tuple(0 for _ in range(5)),
             attn_blocks=tuple(0 for _ in range(5)),
+            ch_mult=(1, 1, 2, 2, 4),
             upsample_block_type='image_block',
         ):
         super(Decoder, self).__init__()
@@ -87,10 +88,10 @@ class Decoder(nn.Module):
         layers = nn.ModuleList()
 
         ndf_cur = ndf
-        for ind in range(self.depth):
+        for ind, ch_factor in enumerate(ch_mult):
             data_shape = tuple(int(d/2) for d in data_shape)
             out_filters = ndf_cur
-            ndf_cur = ndf_cur * 2
+            ndf_cur = ndf_cur * ch_factor
             for _ in range(res_blocks[ind]):
                 layers.append(ResnetBlock(ndf_cur, out_filters, 
                     data_dim=self.data_dim))

@@ -9,6 +9,7 @@ data_shape = [ 8192, ]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
 attn_blocks = [0, 0, 0, 0, 0, 0]
+ch_mult = [2, 2, 2, 2, 2, 2]
 output_activation = 'tanh'
 upsample_block_type = 'audio_block'
 downsample_block_type = 'audio_block'
@@ -33,6 +34,7 @@ data_shape = [ 128, ]
 depth = 6
 res_blocks = [0, 0, 0, 0, 0, 0]
 attn_blocks = [0, 0, 0, 0, 0, 1]
+ch_mult = [2, 2, 2, 2, 2, 2]
 
 [[critic.opt_cfgs]]
 class='Adam'

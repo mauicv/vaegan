@@ -10,6 +10,7 @@ def test_critic_2D(res_blocks):
         data_shape=(32, 32),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
+        ch_mult=(2, 2, 2),
         downsample_block_type='image_block',
     )
     t = torch.randn((64, 3, 32, 32))
@@ -23,6 +24,7 @@ def test_loss_2D(res_blocks):
         data_shape=(32, 32),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
+        ch_mult=(2, 2, 2),
         downsample_block_type='image_block',
     )
     t1 = torch.randn((1, 3, 32, 32))
@@ -40,6 +42,7 @@ def test_critic_1D(res_blocks):
         data_shape=(8192, ),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
+        ch_mult=(2, 2, 2),
         downsample_block_type='audio_block',
     )
     t = torch.randn((64, 2, 8192))
@@ -53,6 +56,7 @@ def test_loss_1D(res_blocks):
         data_shape=(8192, ),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
+        ch_mult=(2, 2, 2),
         downsample_block_type='audio_block',
     )
     t1 = torch.randn((1, 2, 8192))
@@ -70,6 +74,7 @@ def test_critic_1D_aud(res_blocks):
         data_shape=(8192, ),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 0, 0, 0, 1),
+        ch_mult=(2, 2, 2, 2, 2, 2),
         downsample_block_type='audio_block',
     )
     t = torch.randn((64, 2, 8192))
@@ -82,6 +87,7 @@ def test_critic_1D_aud_v2():
         data_shape=(8192, ),
         res_blocks=(0, 0, 0, 0, 0, 0, 0, 0),
         attn_blocks=(0, 0, 0, 0, 0, 0, 0, 0),
+        ch_mult=(2, 2, 2, 2, 2, 2, 2, 2),
         downsample_block_type='audio_block_v2',
     )
     t = torch.randn((64, 2, 8192))
@@ -95,6 +101,7 @@ def test_multi_res_critic_1D(res_blocks):
         data_shape=(8192, ),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
+        ch_mult=(2, 2, 2),
         downsample_block_type='audio_block',
         num_resolutions=3,
         patch=True
@@ -112,6 +119,7 @@ def test_multi_res_loss_1D(res_blocks):
         data_shape=(8192, ),
         res_blocks=res_blocks,
         attn_blocks=(0, 0, 1),
+        ch_mult=(2, 2, 2),
         downsample_block_type='audio_block',
         num_resolutions=3
     )

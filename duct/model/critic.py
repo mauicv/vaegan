@@ -23,15 +23,22 @@ class Critic(nn.Module):
           depth=5, 
           res_blocks=tuple(0 for _ in range(5)),
           attn_blocks=tuple(0 for _ in range(5)),
+          ch_mult=(1, 1, 2, 2, 3),
           downsample_block_type='image_block',
           patch=False
         ):
         super(Critic, self).__init__()
         assert len(data_shape) in {1, 2}, "data_dim must be 1 or 2"
+        assert len(res_blocks) == len(attn_blocks) == len(ch_mult),(
+                f'len(res_blocks)={len(res_blocks)},'
+                f'len(attn_blocks)={len(attn_blocks)} and '
+                f'len(ch_mult)={len(ch_mult)} should all be the same length'
+            )
         self.encoder = Encoder(
             nc=nc, ndf=ndf, depth=depth,
             data_shape=data_shape,
             res_blocks=res_blocks,
+            ch_mult=ch_mult,
             downsample_block_type=downsample_block_type,
             attn_blocks=attn_blocks
         )
@@ -74,6 +81,7 @@ class MultiResCritic(nn.Module):
             depth=5, 
             res_blocks=tuple(0 for _ in range(5)),
             attn_blocks=tuple(0 for _ in range(5)),
+            ch_mult=(1, 1, 2, 2, 3),
             downsample_block_type='image_block',
             patch=True,
             num_resolutions=3
@@ -88,6 +96,7 @@ class MultiResCritic(nn.Module):
                 nc=nc, ndf=ndf, depth=depth,
                 data_shape=data_shape,
                 res_blocks=res_blocks,
+                ch_mult=ch_mult,
                 downsample_block_type=downsample_block_type,
                 attn_blocks=attn_blocks,
                 patch=patch

@@ -6,6 +6,7 @@ data_shape = [ 8192, ]
 depth = 3
 res_blocks = [0, 2, 2]
 attn_blocks = [0, 0, 0]
+ch_mult = [2, 2, 2]
 num_resolutions = 3
 downsample_block_type='audio_block'
 

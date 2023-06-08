@@ -25,7 +25,9 @@ def test_encoder_image(res_blocks):
     encoder = Encoder(3, 16, depth=3,
                       data_shape=(32, 32),
                       res_blocks=res_blocks,
-                      attn_blocks=(0, 0, 1))
+                      attn_blocks=(0, 0, 1),
+                      ch_mult=(2, 2, 2)
+                    )
     t = torch.randn((64, 3, 32, 32))
     x = encoder(t)
     assert x.shape == (64, 128, 4, 4)
@@ -37,6 +39,7 @@ def test_encoder_audio(res_blocks):
                       data_shape=(8192, ),
                       res_blocks=res_blocks,
                       attn_blocks=(0, 0, 1, 0),
+                      ch_mult=(2, 2, 2, 2),
                       downsample_block_type='audio_block',)
     t = torch.randn((64, 2, 8192))
     x = encoder(t)
@@ -48,6 +51,7 @@ def test_encoder_audio_v2():
                       data_shape=(8192, ),
                       res_blocks=(0, 0, 0),
                       attn_blocks=(0, 0, 0),
+                      ch_mult=(2, 2, 2),
                       downsample_block_type='audio_block_v2',)
     t = torch.randn((64, 2, 8192))
     x = encoder(t)
