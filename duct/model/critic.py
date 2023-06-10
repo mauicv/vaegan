@@ -210,6 +210,10 @@ class MultiScaleSpectralCritic(nn.Module):
         for real_fmaps, fake_fmaps in zip(real_discs_fmaps, fake_discs_fmaps):
             for real_fmap, fake_fmap in zip(real_fmaps, fake_fmaps):
                 l1 = torch.abs(real_fmap - fake_fmap)
-                real_mean = torch.mean(real_fmap, dim=(1, 2, 3), keepdim=True)
+                real_mean = torch.mean(
+                    torch.abs(real_fmap), 
+                    dim=(1, 2, 3),
+                    keepdim=True
+                )
                 loss_sum = loss_sum + (l1/real_mean).sum(dim=(1, 2, 3))
         return loss_sum / KL

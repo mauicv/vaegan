@@ -229,7 +229,7 @@ def test_util_multi_scale_spectral_critic(tmp_path):
     [critic]
     class = 'MultiScaleSpectralCritic'
     nc = 2
-    ndf = 16
+    ndf = 32
     depth = 3
     patch = true
     n_ffts = [1024, 2048, 512]
@@ -240,6 +240,7 @@ def test_util_multi_scale_spectral_critic(tmp_path):
     class = 'Adam'
     name = 'critic_opt'
     lr = 0.0005
+    betas = [0.5, 0.9]
     """
     a = Experiment.from_toml(toml_str)
     assert isinstance(a.critic, MultiScaleSpectralCritic)
