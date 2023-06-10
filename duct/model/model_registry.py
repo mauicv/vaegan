@@ -1,6 +1,6 @@
 from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder, \
     VQVarAutoEncoder, VQVarAutoEncoder
-from duct.model.critic import Critic, MultiResCritic, SpectralCritic
+from duct.model.critic import Critic, MultiResCritic, SpectralCritic, MultiScaleSpectralCritic
 from duct.model.patch_critic import PatchCritic1D, PatchCritic2D
 from duct.model.transformer.model import Transformer, RelEmbTransformer
 
@@ -21,7 +21,8 @@ class ModelRegistry:
             'Transformer': Transformer,
             'RelEmbTransformer': RelEmbTransformer,
             'MultiResCritic': MultiResCritic,
-            'SpectralCritic': SpectralCritic
+            'SpectralCritic': SpectralCritic,
+            'MultiScaleSpectralCritic': MultiScaleSpectralCritic,
         }
 
     def __getitem__(self, item):

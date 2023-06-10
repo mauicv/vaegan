@@ -1,7 +1,7 @@
 from duct.utils.config_mixin import ConfigMixin
 from duct.model.autoencoders import NLLVarAutoEncoder, VarAutoEncoder, AutoEncoder, \
     VQVarAutoEncoder
-from duct.model.critic import Critic, MultiResCritic, SpectralCritic
+from duct.model.critic import Critic, MultiResCritic, SpectralCritic, MultiScaleSpectralCritic
 from duct.model.patch_critic import PatchCritic1D, PatchCritic2D
 from duct.model.transformer.model import Transformer, RelEmbTransformer
 from torch.optim import Adam, AdamW
@@ -220,6 +220,29 @@ def test_util_mixin_multi_res_critic(tmp_path):
 def test_util_mixin_spectral_critic(tmp_path):
     a = Experiment.from_file(path='./tests/test_configs/spectral_critic.toml')
     assert isinstance(a.critic, SpectralCritic)
+    assert isinstance(a.critic_opt, Adam)
+    a.save_state(tmp_path)
+    a.load_state(tmp_path) 
+
+def test_util_multi_scale_spectral_critic(tmp_path):
+    toml_str = """
+    [critic]
+    class = 'MultiScaleSpectralCritic'
+    nc = 2
+    ndf = 16
+    depth = 3
+    patch = true
+    n_ffts = [1024, 2048, 512]
+    hop_lengths = [256, 512, 128]
+    win_lengths = [1024, 2048, 512]
+
+    [[critic.opt_cfgs]]
+    class = 'Adam'
+    name = 'critic_opt'
+    lr = 0.0005
+    """
+    a = Experiment.from_toml(toml_str)
+    assert isinstance(a.critic, MultiScaleSpectralCritic)
     assert isinstance(a.critic_opt, Adam)
     a.save_state(tmp_path)
     a.load_state(tmp_path) 

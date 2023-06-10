@@ -2,12 +2,11 @@
 class = 'SpectralCritic'
 nc = 2
 ndf = 16
-data_shape = [4, 8192]
 depth = 3
 patch = true
 n_fft = 1024
 hop_length = 256
-window_length = 1024
+win_length = 1024
 
 [[critic.opt_cfgs]]
 class = 'Adam'

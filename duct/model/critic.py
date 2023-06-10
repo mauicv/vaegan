@@ -127,55 +127,89 @@ class SpectralCritic(nn.Module):
     def __init__(self,
             nc, 
             ndf,  
-            data_shape=(4, 8192),
             depth=5,
             patch=True,
             n_fft=1024,
             hop_length=256,
-            window_length=1024,
+            win_length=1024,
+            normalized=True
         ):
         super(SpectralCritic, self).__init__()
         self.patch = patch
         self.spectral_transform = SpectralTransform(
             n_fft=n_fft,
             hop_length=hop_length,
-            window_length=window_length
+            window_length=win_length,
+            normalized=normalized
         )
         self.spectral_encoder = SpectralEncoder(
             nc=nc, ndf=ndf, depth=depth,
         )
 
-        with torch.no_grad():
-            test = torch.ones((1, *data_shape))
-            if next(self.parameters()).is_cuda: 
-                test = test.cuda()
-            test = self.spectral_transform(test)
-            test = self.spectral_encoder(test)
-
         self.out_conv = get_conv(
             data_dim=2,
-            in_channels=test.shape[1],
+            in_channels=self.spectral_encoder.fin_ndf,
             out_channels=1,
-            kernel_size=(test.shape[2], 1)
+            kernel_size=(3, 3),
+            with_weight_norm=True,
+            stride=(1, 1)
         )
 
         self.apply(weights_init)
 
     def forward(self, x):
         x = self.spectral_transform(x)
-        x = self.spectral_encoder(x)
+        x, fmaps = self.spectral_encoder(x)
         x = self.out_conv(x)
-        return x.squeeze()
+        return x, fmaps
 
-    def loss(self, x, y, layers=None):
-        self.train(False)
-        x = self.spectral_transform(x)
-        y = self.spectral_transform(y)
-        losses = self.spectral_encoder.loss(x, y)
-        self.train(True)
-        if layers is not None:
-            losses = [
-                loss for ind, loss in enumerate(losses)
-                if ind in layers
-            ]
-        return sum(losses) / len(losses)
+
+class MultiScaleSpectralCritic(nn.Module):
+    def __init__(
+            self,
+            nc=1, 
+            ndf=32,  
+            depth=5,
+            n_ffts=[1024, 2048, 512],
+            hop_lengths=[256, 512, 128],
+            win_lengths=[1024, 2048, 512],
+            normalized=True,
+            **kwargs
+        ):
+        super().__init__()
+        assert len(n_ffts) == len(hop_lengths) == len(win_lengths)
+        self.discriminators = nn.ModuleList([
+            SpectralCritic(
+                nc,
+                n_fft=n_fft, 
+                ndf=ndf,
+                depth=depth,
+                normalized=normalized,
+                win_length=win_len, 
+                hop_length=hop_len, 
+                **kwargs
+            )
+            for n_fft, hop_len, win_len in zip(n_ffts, hop_lengths, win_lengths)
+        ])
+        self.num_discriminators = len(self.discriminators)
+
+    def forward(self, x):
+        logits = []
+        fmaps = []
+        for disc in self.discriminators:
+            logit, fmap = disc(x)
+            logits.append(logit)
+            fmaps.append(fmap)
+        return logits, fmaps
+
+    @staticmethod
+    def relative_feature_loss(real_discs_fmaps, fake_discs_fmaps):
+        """see 'High Fidelity Neural Audio Compression' EnCodec paper"""
+        KL = len(real_discs_fmaps) * len(real_discs_fmaps[0])
+        loss_sum = 0
+        for real_fmaps, fake_fmaps in zip(real_discs_fmaps, fake_discs_fmaps):
+            for real_fmap, fake_fmap in zip(real_fmaps, fake_fmaps):
+                l1 = torch.abs(real_fmap - fake_fmap)
+                real_mean = torch.mean(real_fmap, dim=(1, 2, 3), keepdim=True)
+                loss_sum = loss_sum + (l1/real_mean).sum(dim=(1, 2, 3))
+        return loss_sum / KL

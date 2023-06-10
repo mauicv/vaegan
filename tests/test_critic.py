@@ -1,6 +1,6 @@
 import pytest
 import torch
-from duct.model.critic import Critic, MultiResCritic, SpectralCritic
+from duct.model.critic import Critic, MultiResCritic, SpectralCritic, MultiScaleSpectralCritic
 
 
 @pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 2, 0)])
@@ -131,38 +131,61 @@ def test_multi_res_loss_1D(res_blocks):
     assert loss == 0
 
 
-@pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 2, 0)])
-def test_spectral_critic(res_blocks):
+def test_spectral_critic():
     critic = SpectralCritic(
-        nc=2, 
-        ndf=8,  
-        data_shape=(4, 8192),
+        nc=1,
+        ndf=32,
         depth=3,
         patch=True,
         n_fft=1024,
         hop_length=256,
-        window_length=1024,
+        win_length=1024,
     )
-    t = torch.randn((64, 2, 8192))
-    results = critic(t)
-    assert results.shape == (64, 4)
+    t = torch.randn(1, 1, 24000)
+    logits, fmap = critic(t)
+    assert logits.shape == (1, 1, 86, 61)
+    assert len(fmap) == 4
 
 
-@pytest.mark.parametrize("res_blocks", [(0, 0, 0), (1, 2, 0)])
-def test_spectral_loss(res_blocks):
-    critic = SpectralCritic(
-        nc=2, 
-        ndf=8,  
-        data_shape=(4, 8192),
+def test_multi_res_spectral_critic():
+    critic = MultiScaleSpectralCritic(
+        nc=1,
+        ndf=32,
         depth=3,
         patch=True,
-        n_fft=1024,
-        hop_length=256,
-        window_length=1024,
+        n_ffts=[2048, 1024, 512, 256, 128],
+        hop_lengths=[512, 256, 128, 64, 32],
+        win_lengths=[2048, 1024, 512, 256, 128],
+        normalized=True,
     )
-    t1 = torch.randn((1, 2, 8192))
-    t2 = torch.randn((1, 2, 8192))
-    loss = critic.loss(t1, t2)
-    assert loss > 0
-    loss = critic.loss(t1, t1)
+    t = torch.randn(2, 1, 24000)
+    logits, fmaps = critic(t)
+    assert all([len(l.shape)==4 for l in logits])
+    for fmap_set in fmaps:
+        assert all([len(l.shape)==4 for l in fmap_set])
+
+    
+def test_multi_res_spectral_critic_loss():
+    critic = MultiScaleSpectralCritic(
+        nc=1,
+        ndf=32,
+        depth=3,
+        patch=True,
+        n_ffts=[2048, 1024, 512, 256, 128],
+        hop_lengths=[512, 256, 128, 64, 32],
+        win_lengths=[2048, 1024, 512, 256, 128],
+        normalized=True,
+    )
+    t1 = torch.randn(2, 1, 24000)
+    t2 = torch.randn(2, 1, 24000)
+    _, fmaps_1 = critic(t1)
+    _, fmaps_2 = critic(t2)
+    loss = critic.relative_feature_loss(fmaps_1, fmaps_2)
+    assert loss.shape == (2, )
+    assert loss.sum() > 0
+
+    t = torch.randn(1, 1, 24000)
+    _, fmaps = critic(t)
+    loss = critic.relative_feature_loss(fmaps, fmaps)
+    assert loss.shape == (1, )
     assert loss == 0
